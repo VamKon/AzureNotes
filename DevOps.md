@@ -1,5 +1,4 @@
-# AZ-400
-Gotcha's for AZ-400 prep
+# DevOps
 
 ## ARM Templates
 To deploy complex solutions, you can break a template into many templates, and deploy these templates through a main template.
