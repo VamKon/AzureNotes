@@ -148,6 +148,5 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
 * Have to use Maven or Gradle for enabling SonarQube Analysis
 * Bamboo - CI/CD tool from Altassian
 * PMD, FindBugs - Java static code analysis. Can be setup using Maven or Gradle tasks
-* 
 
 
