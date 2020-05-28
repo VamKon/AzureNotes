@@ -20,7 +20,7 @@ Need to enable AzureKeyVault for template deployment so that ARM Template can re
 * .npmrc (npm config) file:
   * in user’s home folder will contain credentials for all of the registries needed. ($Home = linux, $env.Home = win)
   * In project root beside project.json will contain registry info
-  * ![](/images/Artifacts_FeedPermissionsOverview.jpg)
+  * ![](/images/Artifacts_FeedPermissionsOverview.JPG)
 
 ### CI
 * Java - To deploy complex solutions, you can break a template into many templates, and deploy these templates through a main template.
@@ -65,7 +65,7 @@ Need to enable AzureKeyVault for template deployment so that ARM Template can re
     * ApplyAndAutoCorrect - Auto corrects config
     * ApplyAndMonitor - Send alerts when config deviates
 * Azure Policy Service can enforce rules over which VM sizes can be created. Applicable for other resources as well. This can be enforced via a gate in CD pipeline
-![](/images/DevOps_CD_Gates.jpg)
+![](/images/DevOps_CD_Gates.JPG)
 
 ## Azure App Center
 * Initialize AppCenter with analytics about crashes - MSAppcenter.start(“{Your App Secret}”, withServices: [MSAnalytics.self, MSCrashes.self ])
