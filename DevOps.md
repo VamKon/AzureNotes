@@ -25,6 +25,11 @@
 ## ARM Templates
 * To deploy complex solutions, you can break a template into many templates, and deploy these templates through a main template.
 * Use `CustomScriptExtension` to run custom scripts on a VM when it starts.
+* `az deployment [group] create`:
+  * group - RG
+  * sub - subscription
+  * mg - management group
+  * tenant - tenant
 
 ## Azure Key Vault
 Need to enable Azure Key Vault for template deployment so that ARM Template can read secrets from KeyVault (`enabledForTemplateDeployment` property)
@@ -45,6 +50,7 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
   * Push image to ACR - `docker push myregistry.azurecr.io/samples/nginx`
   * Pull - `docker pull myregistry.azurecr.io/samples/nginx`
   * Run the image - `docker run -it --rm -p 8080:80 myregistry.azurecr.io/samples/nginx`
+* `az acr build` - build an image
 
 ## Helm
 * Helm init - install tiller on AKS
@@ -100,6 +106,11 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
 * Cycle Time - Time it takes for your team to complete work items once they begin actively working on them
 * Lead Time - Time taken for a feature to be delivered from scratch.
+* **[Process](https://docs.microsoft.com/en-us/azure/devops/boards/work-items/guidance/choose-process?view=azure-devops&tabs=basic-process#basic-agile-scrum-and-cmmi)**:
+  * Basic: simplest model that uses Issues, Tasks, and Epics to track work.
+  * Agile: tracks development and test activities separately. This process works great if you want to track user stories and (optionally) bugs on the Kanban board, or track bugs and tasks on the taskboard
+  * Scrum: works great if you want to track product backlog items (PBIs) and bugs on the Kanban board, or break PBIs and bugs down into tasks on the taskboard
+  * CMMI: With this process, you can track requirements, change requests, risks, and reviews - more formal project methods.
 
 ## Monitoring
 ### Azure Log Analytics
