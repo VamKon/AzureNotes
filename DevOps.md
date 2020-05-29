@@ -6,6 +6,7 @@
   - [AKS](#aks)
   - [ACR](#acr)
   - [Helm](#helm)
+  - [Docker](#docker)
   - [Azure Devops](#azure-devops)
     - [Artifacts](#artifacts)
     - [CI](#ci)
@@ -28,12 +29,38 @@
 * Use `CustomScriptExtension` to run custom scripts on a VM when it starts.
 * `az deployment [group] create`:
   * group - RG
-  * sub - subscription
+  * sub - subscription. Running az deployment without specifying sub runs the ARM template at subscription level.
   * mg - management group
   * tenant - tenant
+* Deployment Modes:
+  * `Complete` - In complete mode, Resource Manager deletes resources that exist in the resource group but aren't specified in the template.
+  * `Incremental` - Default mode. Leaves unchanged resources that exist in the resource group but aren't specified in the template. Resources in the template are added to the resource group.
 
 ## Azure Key Vault
-Need to enable Azure Key Vault for template deployment so that ARM Template can read secrets from KeyVault (`enabledForTemplateDeployment` property)
+* Need to enable Azure Key Vault for template deployment so that ARM Template can read secrets from KeyVault (`enabledForTemplateDeployment` property)
+* Accessing a secret from ARM template:
+```
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+      "adminLogin": {
+        "value": "exampleadmin"
+      },
+      "adminPassword": {
+        "reference": {
+          "keyVault": {
+          "id": "/subscriptions/<subscription-id>/resourceGroups/<rg-name>/providers/Microsoft.KeyVault/vaults/<vault-name>"
+          },
+          "secretName": "ExamplePassword"
+        }
+      },
+      "sqlServerName": {
+        "value": "<your-server-name>"
+      }
+      }
+}
+```
 
 ## AKS
 * Scaling nodes = `az aks scale -g myResourceGroup -n myAKSCluster --node-count 3`
@@ -57,6 +84,11 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
 * Helm init - install tiller on AKS
 * Helm install - install helm charts on AKS
 
+## Docker
+* `RUN` - Executes commands in a new layer and creates a new image. Use as few Run statements as possible, combine them.
+* `CMD` - allows you to set a default command, which will be executed only when you run the container without specifying a command.
+* `ENTRYPOINT` - allows you to configure a container that will run as an executable. The command and params are not ignored when docker container runs with command line params.
+
 ## Azure Devops
 * Test & Feedback extension
   * `Stakeholder` access to Azure DevOps allows users to use the `Test & Feedback extension` to request for and respond to provide feedback.
@@ -65,12 +97,18 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
   * `Reader` - View agents and agent pools
   * `Service Account` - Use org agent pools to create project agent pools
   * `Administrator` - Create new agent pools
+* Gathering Feedback for work items
+  * `Stakeholder` - provide or review feedback
+  * `Basic` - Request feedback
+* `win1803` - Windows Server Core 1803 image (for running windows containers)
+* Service Connections are part of project settings not organization settings
 ### Artifacts
 * Public Feeds - you need to have a public project to create a public feed. You cannot convert an existing project scoped feed to a public feed.
 * .npmrc (npm config) file:
   * in user’s home folder will contain credentials for all of the registries needed. ($Home = linux, $env.Home = win)
   * In project root beside project.json will contain registry info
   * ![](/images/Artifacts_FeedPermissionsOverview.JPG)
+* `nuget push -Source <SourceName> -ApiKey az <PackagePath exp:(.\Get-Hello.1.0.0.nupkg)>`
 
 ### CI
 * Java - To deploy complex solutions, you can break a template into many templates, and deploy these templates through a main template.
@@ -91,13 +129,29 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
   * And on the host:
     * Docker must be installed
     * Agent must have permission to access the Docker daemon
-
+* YAML pipeline schema:
+  * If you have a single stage, you can omit the stages keyword and directly specify the jobs keyword
+  * If you have a single stage and a single job, you can omit the stages and jobs keywords and directly specify the steps keyword
+```
+name: string  # build numbering format
+resources:
+  pipelines: [ pipelineResource ]
+  containers: [ containerResource ]
+  repositories: [ repositoryResource ]
+variables: # several syntaxes, see specific section
+trigger: trigger
+pr: pr
+stages: [ stage | templateReference ]
+```
+* [Service Containers](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/service-containers?view=azure-devops&tabs=yaml) - If your pipeline requires the support of one or more services, in many cases you'll want to create, connect to, and clean up each service on a per-job basis. For instance, a pipeline may run integration tests that require access to a database and a memory cache. The database and memory cache need to be freshly created for each job in the pipeline.
+  * Use `script` task to run commands in container
+  
 ### CD
 * Pre/Post Deployment Approvals - Manual Intervention
 * Pre/Post Deployment Gates - Automation
 * For Blue-Green deployments using weighted routing method use Azure Traffic Manager
 ![](images/azuretrafficmanager_weightedrouting.png)
-* Use `Deployment Groups` in pipelines to deploy to a group of servers. Deployment Groups also allow you to deploy to a subset of servers to perform a safe rolling deployment.
+* Use `Deployment Groups` in pipelines to deploy to a group of servers. Deployment Groups also allow you to deploy to a subset of servers to perform a safe rolling deployment. Servers can be a combination of cloud/on-prem. Use `Deployment Group Job` in pipeline for this.
 * `App Center Distribute` task - Distribute app builds to testers and users throught app center
 * To restrict a variable to be used for a specific stage in a release, you have to set the `scope` for the variable to the appropriate stage.
 * 
@@ -108,17 +162,21 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
 * To use code from Git repo in Azure Devops:
   * Add Git Url
   * Add a Personal Access Token from DevOps into Jenkins
-  * 
+* To kick off a CI build in Jenkins from a repo managed in Azure DevOps, we need to create a service hook in Azure DevOps.
 
 ### Repository
 * User “Choose import from Git repository” to import an existing repo in GitHub to Azure DevOps
 * The Azure Boards app for GitHub is the preferred method for integrating Azure Boards with GitHub. By connecting you can support linking between GitHub commits and pull requests to work items in Azure.
 * Adding a repo to Azure boards - Add it from GitHub Connections in Azure Devops, project settings.
+* With TFVC you can set permissions at a file level, which is not possible with git
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
 * Cycle Time - Time it takes for your team to complete work items once they begin actively working on them
 * Lead Time - Time taken for a feature to be delivered from scratch.
+* Burndown - Trend of remaining work across multiple teams and multiple sprints
+* Burnup - Trend of completed work across multiple teams and multiple sprints
+* Velocity - How much work your team can complete during a sprint
 * **[Process](https://docs.microsoft.com/en-us/azure/devops/boards/work-items/guidance/choose-process?view=azure-devops&tabs=basic-process#basic-agile-scrum-and-cmmi)**:
   * Basic: simplest model that uses Issues, Tasks, and Epics to track work.
   * Agile: tracks development and test activities separately. This process works great if you want to track user stories and (optionally) bugs on the Kanban board, or track bugs and tasks on the taskboard
