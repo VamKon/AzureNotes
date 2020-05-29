@@ -13,6 +13,7 @@
     - [Jenkins](#jenkins)
     - [Repository](#repository)
     - [Agile](#agile)
+    - [Testing](#testing)
   - [Monitoring](#monitoring)
     - [Azure Log Analytics](#azure-log-analytics)
   - [Others](#others)
@@ -80,6 +81,16 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
   * Microsoft-hosted agents with a public project and public repo = 360 mins (6 hrs)
   * Microsoft-hosted agents with a private project and private repo = 60 mins
 * Use `Azure DevTest Labs` in pipelines to build code from non-supported languages. Using the `Azure DevTest Labs Tasks Extension` you can integrate setting up VMs with custom images, tools etc. to use them for build and deployment and tear them down when done.
+* `Container Jobs` - CI/CD jobs run inside a container on a host VM. That way we don't need to have dedicated VMs with specific configs. They are only available in yaml pipelines. 
+  * For Linux based containers following are required:
+    * Bash
+    * glibc-based
+    * Can run Node.js
+    * Does not define an ENTRYPOINT
+    * User has access to groupadd and other privileges commands without sudo
+  * And on the host:
+    * Docker must be installed
+    * Agent must have permission to access the Docker daemon
 
 ### CD
 * Pre/Post Deployment Approvals - Manual Intervention
@@ -88,6 +99,8 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
 ![](images/azuretrafficmanager_weightedrouting.png)
 * Use `Deployment Groups` in pipelines to deploy to a group of servers. Deployment Groups also allow you to deploy to a subset of servers to perform a safe rolling deployment.
 * `App Center Distribute` task - Distribute app builds to testers and users throught app center
+* To restrict a variable to be used for a specific stage in a release, you have to set the `scope` for the variable to the appropriate stage.
+* 
 
 ### Jenkins
 * To allow Jenkins access to ACR, you need to create a service principal in Azure. In Jenkins you need to create a credential resource for the ACR service principal.
@@ -111,6 +124,11 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
   * Agile: tracks development and test activities separately. This process works great if you want to track user stories and (optionally) bugs on the Kanban board, or track bugs and tasks on the taskboard
   * Scrum: works great if you want to track product backlog items (PBIs) and bugs on the Kanban board, or break PBIs and bugs down into tasks on the taskboard
   * CMMI: With this process, you can track requirements, change requests, risks, and reviews - more formal project methods.
+
+### Testing
+* *Test plans* - used to group together test suites and test cases
+* *Test suites* - group test cases
+* *Test cases* - individual tests, steps for test
 
 ## Monitoring
 ### Azure Log Analytics
@@ -144,7 +162,7 @@ Need to enable Azure Key Vault for template deployment so that ARM Template can 
 * Maven - Java build
 * Gradle - Java build
 * Chef - Config management, Infra as code
-* Puppet - Config management
+* Puppet - Config management, Infra as code
 * Have to use Maven or Gradle for enabling SonarQube Analysis
 * Bamboo - CI/CD tool from Altassian
 * PMD, FindBugs - Java static code analysis. Can be setup using Maven or Gradle tasks
