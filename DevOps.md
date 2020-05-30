@@ -154,7 +154,6 @@ stages: [ stage | templateReference ]
 * Use `Deployment Groups` in pipelines to deploy to a group of servers. Deployment Groups also allow you to deploy to a subset of servers to perform a safe rolling deployment. Servers can be a combination of cloud/on-prem. Use `Deployment Group Job` in pipeline for this.
 * `App Center Distribute` task - Distribute app builds to testers and users throught app center
 * To restrict a variable to be used for a specific stage in a release, you have to set the `scope` for the variable to the appropriate stage.
-* 
 
 ### Jenkins
 * To allow Jenkins access to ACR, you need to create a service principal in Azure. In Jenkins you need to create a credential resource for the ACR service principal.
@@ -169,6 +168,12 @@ stages: [ stage | templateReference ]
 * The Azure Boards app for GitHub is the preferred method for integrating Azure Boards with GitHub. By connecting you can support linking between GitHub commits and pull requests to work items in Azure.
 * Adding a repo to Azure boards - Add it from GitHub Connections in Azure Devops, project settings.
 * With TFVC you can set permissions at a file level, which is not possible with git
+* Locking a branch does not prevent PRs from being completed
+* Merge Types:
+  * `Merge (no fast-forward)`: Default. All the individual commits in the pull request branch are preserved as-is, and a new merge commit is created to unite the master branch and the pull request branch.
+  * `Squash commit`: Squashing will take the tree that’s produced in a merge and creates a single new commit with those repository contents.
+  * `Rebase`: Rebase will take each individual commit in the pull request and cherry-pick them onto the master branch.
+  * `Semi-linear`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
