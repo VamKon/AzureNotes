@@ -173,7 +173,7 @@ stages: [ stage | templateReference ]
   * `Merge (no fast-forward)`: Default. All the individual commits in the pull request branch are preserved as-is, and a new merge commit is created to unite the master branch and the pull request branch.
   * `Squash commit`: Squashing will take the tree that’s produced in a merge and creates a single new commit with those repository contents.
   * `Rebase`: Rebase will take each individual commit in the pull request and cherry-pick them onto the master branch.
-  * `Semi-linear`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
+  * `Semi-linear` or `Rebase and fast-forward`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
@@ -217,6 +217,10 @@ stages: [ stage | templateReference ]
 ### Azure App Center
 * Initialize AppCenter with analytics about crashes - `MSAppcenter.start(“{Your App Secret}”, withServices: [MSAnalytics.self, MSCrashes.self ])`
 * Certificate must be in a `.p12` format
+* Distribution Groups
+  * Private - default, Only people invited via email can access releases available to this group.
+  * Public - enables unauthenticated installs from public links.
+  * Shared - shared across multiple apps in a single organization, eliminate the need to replicate distribution groups across multiple apps
 
 ### Azure Service Fabric
 * For deployment of an application using Azure Pipelines to Azure Service Fabric, you would need to have the cluster endpoint and the Service Certificate Thumbprint.
