@@ -79,15 +79,18 @@
   * Pull - `docker pull myregistry.azurecr.io/samples/nginx`
   * Run the image - `docker run -it --rm -p 8080:80 myregistry.azurecr.io/samples/nginx`
 * `az acr build` - build an image
+* `acr push` role allows you to push images.
 
 ## Helm
 * Helm init - install tiller on AKS
 * Helm install - install helm charts on AKS
+* Need to use a `service account` to install helm on an AKS cluster using RBAC.
 
 ## Docker
 * `RUN` - Executes commands in a new layer and creates a new image. Use as few Run statements as possible, combine them.
 * `CMD` - allows you to set a default command, which will be executed only when you run the container without specifying a command.
 * `ENTRYPOINT` - allows you to configure a container that will run as an executable. The command and params are not ignored when docker container runs with command line params.
+* Docker yaml task required param - `Command`. Options are buildAndPush, build, push, login and logout
 
 ## Azure Devops
 * Test & Feedback extension
@@ -118,6 +121,8 @@
   * Self-hosted agents = forever
   * Microsoft-hosted agents with a public project and public repo = 360 mins (6 hrs)
   * Microsoft-hosted agents with a private project and private repo = 60 mins
+* Microsoft-hosted agents create a new instance each time, so there is not caching etc. which will be slower than self-hosted agents.
+* Costs for parallel jobs - self-hosted agent has a free tier which can run unlimited parallel jobs on self-hosted VMs for *public projects*
 * Use `Azure DevTest Labs` in pipelines to build code from non-supported languages. Using the `Azure DevTest Labs Tasks Extension` you can integrate setting up VMs with custom images, tools etc. to use them for build and deployment and tear them down when done.
 * `Container Jobs` - CI/CD jobs run inside a container on a host VM. That way we don't need to have dedicated VMs with specific configs. They are only available in yaml pipelines. 
   * For Linux based containers following are required:
@@ -174,6 +179,7 @@ stages: [ stage | templateReference ]
   * `Squash commit`: Squashing will take the tree that’s produced in a merge and creates a single new commit with those repository contents.
   * `Rebase`: Rebase will take each individual commit in the pull request and cherry-pick them onto the master branch.
   * `Semi-linear` or `Rebase and fast-forward`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
+* oAuth is the preferred auth method from AzureDevOps to Git.
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
@@ -183,15 +189,17 @@ stages: [ stage | templateReference ]
 * Burnup - Trend of completed work across multiple teams and multiple sprints
 * Velocity - How much work your team can complete during a sprint
 * **[Process](https://docs.microsoft.com/en-us/azure/devops/boards/work-items/guidance/choose-process?view=azure-devops&tabs=basic-process#basic-agile-scrum-and-cmmi)**:
-  * Basic: simplest model that uses Issues, Tasks, and Epics to track work.
-  * Agile: tracks development and test activities separately. This process works great if you want to track user stories and (optionally) bugs on the Kanban board, or track bugs and tasks on the taskboard
-  * Scrum: works great if you want to track product backlog items (PBIs) and bugs on the Kanban board, or break PBIs and bugs down into tasks on the taskboard
-  * CMMI: With this process, you can track requirements, change requests, risks, and reviews - more formal project methods.
+  * `Basic`: simplest model that uses Issues, Tasks, and Epics to track work. Taks support remaining work
+  * `Agile`: tracks development and test activities separately. This process works great if you want to track user stories and (optionally) bugs on the Kanban board, or track bugs and tasks on the taskboard. Tasks support tracking original work, completed work and remaining work. 
+  * `Scrum`: works great if you want to track product backlog items (PBIs) and bugs on the Kanban board, or break PBIs and bugs down into tasks on the taskboard. Tasks support tracking remaining work only.
+  * `CMMI`: With this process, you can track requirements, change requests, risks, and reviews - more formal project methods. Tasks support tracking original work, completed work and remaining work.
+* `Kanban board` allows you to allows a user to add,view and interact directly. Allows you to make changes to test cases directly.
 
 ### Testing
 * *Test plans* - used to group together test suites and test cases
 * *Test suites* - group test cases
 * *Test cases* - individual tests, steps for test
+* To reduce costs for cloud-based load testing - limit the number of `virtual user minutes` that the testing uses, because you are charged for the number of VUMs used.
 
 ## Monitoring
 ### Azure Log Analytics
@@ -200,6 +208,7 @@ stages: [ stage | templateReference ]
 ## Others
 ### Azure Automation
 * You can store Azure Automation Runbooks in Source Control. GitHub, Azure Repos are supported.
+* To run Ansible scripts from inside Azure network - its best to use `Azure Cloud Shell` as support for Ansible is built in.
 ### Virtual Machines Desired State Configuration
 * Powershell Desired State Configuration (DSC) - Allows VMs to maintain a desired state.
 * Azure Automation State Configuration allows you to write, manage and compile Powershell DSC
@@ -221,6 +230,10 @@ stages: [ stage | templateReference ]
   * Private - default, Only people invited via email can access releases available to this group.
   * Public - enables unauthenticated installs from public links.
   * Shared - shared across multiple apps in a single organization, eliminate the need to replicate distribution groups across multiple apps
+* To send App Center analytics to App Insights:
+  * Link Azure Subscription with App Center
+  * Export App Center Analytics to Application Insights
+* IOS apps have to be signed, a provision profile and register a test device in Apple Developer portal for testing. Apps for android don't need to be signed for testing.
 
 ### Azure Service Fabric
 * For deployment of an application using Azure Pipelines to Azure Service Fabric, you would need to have the cluster endpoint and the Service Certificate Thumbprint.
@@ -233,5 +246,6 @@ stages: [ stage | templateReference ]
 * Have to use Maven or Gradle for enabling SonarQube Analysis
 * Bamboo - CI/CD tool from Altassian
 * PMD, FindBugs - Java static code analysis. Can be setup using Maven or Gradle tasks
+* You can enable and `execution strategy` in Entity Framework configuration to setup retry logic for transient failures with the database.
 
 
