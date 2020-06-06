@@ -194,6 +194,7 @@ stages: [ stage | templateReference ]
   * `Scrum`: works great if you want to track product backlog items (PBIs) and bugs on the Kanban board, or break PBIs and bugs down into tasks on the taskboard. Tasks support tracking remaining work only.
   * `CMMI`: With this process, you can track requirements, change requests, risks, and reviews - more formal project methods. Tasks support tracking original work, completed work and remaining work.
 * `Kanban board` allows you to allows a user to add,view and interact directly. Allows you to make changes to test cases directly.
+* Adding AB#[Work Item ID] in the commit message will link commit to work item.
 
 ### Testing
 * *Test plans* - used to group together test suites and test cases
