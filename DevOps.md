@@ -75,6 +75,7 @@
 * `Docker compose` enables you to bring up multiple containers and run tests. You can use a `docker-compose.yml` file to define two containers that need to work together.
 * Scale pods manually - `kubectl scale --replicas=n deployment/[podname]`
 * The `kubelet` is the primary “node agent” that runs on each node. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
+* `Pod disruption budget` - To maintain the availability of applications, define Pod Disruption Budgets (PDBs) to make sure that a minimum number of pods are available in the cluster incase of voluntary disruptions.
 
 
 ## ACR
@@ -87,6 +88,9 @@
 * `az acr build` - build an image
 * `acr push` role allows you to push images.
 * `Docker Trusted Registry` scans container images automatically.
+* ACR Tasks:
+  * `Quick task` - build and push single container image to a container registry
+  * `Multi-step task` - extend the single image build and push capability of ACR tasks with multi-step, multi-container based workflows.
 
 ## Helm
 * Helm init - install tiller on AKS
@@ -163,6 +167,11 @@ stages: [ stage | templateReference ]
 ```
 * [Service Containers](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/service-containers?view=azure-devops&tabs=yaml) - If your pipeline requires the support of one or more services, in many cases you'll want to create, connect to, and clean up each service on a per-job basis. For instance, a pipeline may run integration tests that require access to a database and a memory cache. The database and memory cache need to be freshly created for each job in the pipeline.
   * Use `script` task to run commands in container
+* Personal access tokens (PATs) are the only authentication option when you connect an agent to a pipeline.
+* `Semver`
+  * major version - when you make incompatible API changes
+  * minor version - add functionality in a backwards compatible manner
+  * patch version - make backwards compatible bug fixes
   
 ### CD
 * Pre/Post Deployment Approvals - Manual Intervention
@@ -195,6 +204,9 @@ stages: [ stage | templateReference ]
 * oAuth is the preferred auth method from AzureDevOps to Git.
 * `Mercurial` is not supported by Azure DevOps
 * For hosting Java packages you can use Azure Devops, Nexus or Artifactory
+* TFVC Commands:
+  * `tf workfold` - creates, modifies or displays info about mappings between folders
+  * `tf configure` - view or change project settings
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
