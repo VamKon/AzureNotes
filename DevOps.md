@@ -69,6 +69,7 @@
 * *Role bindings* are used to assign *roles* for a given *namespace*. If you need to bind roles across the entire cluster, or cluster resources outside a given namespace, you can instead use `ClusterRoleBindings`
 * `Docker compose` enables you to bring up multiple containers and run tests. You can use a `docker-compose.yml` file to define two containers that need to work together.
 * Scale pods manually - `kubectl scale --replicas=n deployment/[podname]`
+* The `kubelet` is the primary “node agent” that runs on each node. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
 
 
 ## ACR
@@ -80,6 +81,7 @@
   * Run the image - `docker run -it --rm -p 8080:80 myregistry.azurecr.io/samples/nginx`
 * `az acr build` - build an image
 * `acr push` role allows you to push images.
+* `Docker Trusted Registry` scans container images automatically.
 
 ## Helm
 * Helm init - install tiller on AKS
@@ -180,6 +182,7 @@ stages: [ stage | templateReference ]
   * `Rebase`: Rebase will take each individual commit in the pull request and cherry-pick them onto the master branch.
   * `Semi-linear` or `Rebase and fast-forward`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
 * oAuth is the preferred auth method from AzureDevOps to Git.
+* For hosting Java packages you can use Azure Devops, Nexus or Artifactory
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
@@ -238,6 +241,7 @@ stages: [ stage | templateReference ]
 
 ### Azure Service Fabric
 * For deployment of an application using Azure Pipelines to Azure Service Fabric, you would need to have the cluster endpoint and the Service Certificate Thumbprint.
+* Cluster Resource Manager does not perform any type of load balancing. So, to ensure microservices run efficienctly, you have to perform load balancing.
 
 ### Other Tools
 * Maven - Java build
@@ -248,5 +252,9 @@ stages: [ stage | templateReference ]
 * Bamboo - CI/CD tool from Altassian
 * PMD, FindBugs - Java static code analysis. Can be setup using Maven or Gradle tasks
 * You can enable and `execution strategy` in Entity Framework configuration to setup retry logic for transient failures with the database.
+* For integration with `Trello` from Azure Devops
+  * Create a service hook to Trello in Devops
+  * Allow Azure Devops permissions in Trello
+* `Azure Site Recovery` will enable you to replicate your VM from a private data center to Azure wihout taking the application offline.
 
 
