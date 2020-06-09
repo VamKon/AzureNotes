@@ -1,7 +1,9 @@
 # DevOps
 
 - [DevOps](#devops)
-  - [ARM Templates](#arm-templates)
+  - [Deployments](#deployments)
+    - [ARM Templates](#arm-templates)
+    - [Azure CLI](#azure-cli)
   - [Azure Key Vault](#azure-key-vault)
   - [AKS](#aks)
   - [ACR](#acr)
@@ -23,7 +25,8 @@
     - [Azure Service Fabric](#azure-service-fabric)
     - [Other Tools](#other-tools)
 
-## ARM Templates
+## Deployments
+### ARM Templates
 * To deploy complex solutions, you can break a template into many templates, and deploy these templates through a main template.
 * Use `CustomScriptExtension` to run custom scripts on a VM when it starts.
 * `az deployment [group] create`:
@@ -34,6 +37,9 @@
 * Deployment Modes:
   * `Complete` - In complete mode, Resource Manager deletes resources that exist in the resource group but aren't specified in the template.
   * `Incremental` - Default mode. Leaves unchanged resources that exist in the resource group but aren't specified in the template. Resources in the template are added to the resource group.
+### Azure CLI
+* To setup a connection string using CLI - `az webapp config connection-string set -g MyResourceGroup -n MyUniqueApp -t mysql \
+    --settings mysql1='Server=myServer;Database=myDB;Uid=myUser;Pwd=myPwd;'`
 
 ## Azure Key Vault
 * Need to enable Azure Key Vault for template deployment so that ARM Template can read secrets from KeyVault (`enabledForTemplateDeployment` property)
@@ -110,6 +116,8 @@
   * `Stakeholder` - Access to boards etc. Unlimited free licenses for this. No access to code repos.
 * `win1803` - Windows Server Core 1803 image (for running windows containers)
 * Service Connections are part of project settings not organization settings
+* Azure Pipeline Library
+  * Secure Files - se the Secure Files library to store files such as signing certificates, Apple Provisioning Profiles, Android Keystore files, and SSH keys on the server without having to commit them to your source repository. Pipelines can download and use these files using the `Download secure file` task.
 ### Artifacts
 * Public Feeds - you need to have a public project to create a public feed. You cannot convert an existing project scoped feed to a public feed.
 * .npmrc (npm config) file:
@@ -211,6 +219,7 @@ stages: [ stage | templateReference ]
 ## Monitoring
 * IT Service Management Connector - allows you to connect Azure and a supported IT Service Management (ITSM) product such as ServiceNow. Ex: when there is an issue a ticket is generated.
 * `Smart Groups` allow you to group similar notifications for less clutter.
+* Do not use Azure Monitor for monitoring VMs as VMs will generate a lot of events.
 
 ## Others
 ### Azure Automation
