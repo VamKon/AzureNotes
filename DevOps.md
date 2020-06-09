@@ -1,7 +1,9 @@
 # DevOps
 
 - [DevOps](#devops)
-  - [ARM Templates](#arm-templates)
+  - [Deployments](#deployments)
+    - [ARM Templates](#arm-templates)
+    - [Azure CLI](#azure-cli)
   - [Azure Key Vault](#azure-key-vault)
   - [AKS](#aks)
   - [ACR](#acr)
@@ -23,7 +25,8 @@
     - [Azure Service Fabric](#azure-service-fabric)
     - [Other Tools](#other-tools)
 
-## ARM Templates
+## Deployments
+### ARM Templates
 * To deploy complex solutions, you can break a template into many templates, and deploy these templates through a main template.
 * Use `CustomScriptExtension` to run custom scripts on a VM when it starts.
 * `az deployment [group] create`:
@@ -34,6 +37,9 @@
 * Deployment Modes:
   * `Complete` - In complete mode, Resource Manager deletes resources that exist in the resource group but aren't specified in the template.
   * `Incremental` - Default mode. Leaves unchanged resources that exist in the resource group but aren't specified in the template. Resources in the template are added to the resource group.
+### Azure CLI
+* To setup a connection string using CLI - `az webapp config connection-string set -g MyResourceGroup -n MyUniqueApp -t mysql \
+    --settings mysql1='Server=myServer;Database=myDB;Uid=myUser;Pwd=myPwd;'`
 
 ## Azure Key Vault
 * Need to enable Azure Key Vault for template deployment so that ARM Template can read secrets from KeyVault (`enabledForTemplateDeployment` property)
@@ -68,6 +74,7 @@
 * *Role bindings* are used to assign *roles* for a given *namespace*. If you need to bind roles across the entire cluster, or cluster resources outside a given namespace, you can instead use `ClusterRoleBindings`
 * `Docker compose` enables you to bring up multiple containers and run tests. You can use a `docker-compose.yml` file to define two containers that need to work together.
 * Scale pods manually - `kubectl scale --replicas=n deployment/[podname]`
+* The `kubelet` is the primary “node agent” that runs on each node. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
 
 
 ## ACR
@@ -79,6 +86,7 @@
   * Run the image - `docker run -it --rm -p 8080:80 myregistry.azurecr.io/samples/nginx`
 * `az acr build` - build an image
 * `acr push` role allows you to push images.
+* `Docker Trusted Registry` scans container images automatically.
 
 ## Helm
 * Helm init - install tiller on AKS
@@ -108,6 +116,8 @@
   * `Stakeholder` - Access to boards etc. Unlimited free licenses for this. No access to code repos.
 * `win1803` - Windows Server Core 1803 image (for running windows containers)
 * Service Connections are part of project settings not organization settings
+* Azure Pipeline Library
+  * Secure Files - se the Secure Files library to store files such as signing certificates, Apple Provisioning Profiles, Android Keystore files, and SSH keys on the server without having to commit them to your source repository. Pipelines can download and use these files using the `Download secure file` task.
 ### Artifacts
 * Public Feeds - you need to have a public project to create a public feed. You cannot convert an existing project scoped feed to a public feed.
 * .npmrc (npm config) file:
@@ -184,6 +194,7 @@ stages: [ stage | templateReference ]
   * `Semi-linear` or `Rebase and fast-forward`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
 * oAuth is the preferred auth method from AzureDevOps to Git.
 * `Mercurial` is not supported by Azure DevOps
+* For hosting Java packages you can use Azure Devops, Nexus or Artifactory
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
@@ -209,6 +220,7 @@ stages: [ stage | templateReference ]
 ## Monitoring
 * IT Service Management Connector - allows you to connect Azure and a supported IT Service Management (ITSM) product such as ServiceNow. Ex: when there is an issue a ticket is generated.
 * `Smart Groups` allow you to group similar notifications for less clutter.
+* Do not use Azure Monitor for monitoring VMs as VMs will generate a lot of events.
 
 ## Others
 ### Azure Automation
@@ -242,6 +254,7 @@ stages: [ stage | templateReference ]
 
 ### Azure Service Fabric
 * For deployment of an application using Azure Pipelines to Azure Service Fabric, you would need to have the cluster endpoint and the Service Certificate Thumbprint.
+* Cluster Resource Manager does not perform any type of load balancing. So, to ensure microservices run efficienctly, you have to perform load balancing.
 
 ### Other Tools
 * Maven - Java build
@@ -252,5 +265,9 @@ stages: [ stage | templateReference ]
 * Bamboo - CI/CD tool from Altassian
 * PMD, FindBugs - Java static code analysis. Can be setup using Maven or Gradle tasks
 * You can enable and `execution strategy` in Entity Framework configuration to setup retry logic for transient failures with the database.
+* For integration with `Trello` from Azure Devops
+  * Create a service hook to Trello in Devops
+  * Allow Azure Devops permissions in Trello
+* `Azure Site Recovery` will enable you to replicate your VM from a private data center to Azure wihout taking the application offline.
 
 
