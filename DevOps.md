@@ -183,6 +183,7 @@ stages: [ stage | templateReference ]
   * `Rebase`: Rebase will take each individual commit in the pull request and cherry-pick them onto the master branch.
   * `Semi-linear` or `Rebase and fast-forward`: it’s a mix of rebase and a merge. First, the commits in the pull request are rebased on top of the master branch. Then those rebased pull requests are merged into master branch.
 * oAuth is the preferred auth method from AzureDevOps to Git.
+* `Mercurial` is not supported by Azure DevOps
 
 ### Agile
 * Cumulative Flow Diagram - Count of work items (over time) for each column of a kanban board
