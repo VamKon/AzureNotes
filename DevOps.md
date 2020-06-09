@@ -16,7 +16,6 @@
     - [Agile](#agile)
     - [Testing](#testing)
   - [Monitoring](#monitoring)
-    - [Azure Log Analytics](#azure-log-analytics)
   - [Others](#others)
     - [Azure Automation](#azure-automation)
     - [Virtual Machines Desired State Configuration](#virtual-machines-desired-state-configuration)
@@ -105,6 +104,10 @@
 * Gathering Feedback for work items
   * `Stakeholder` - provide or review feedback
   * `Basic` - Request feedback
+* Licensing
+  * Azure DevOps comes with 5 free `Basic` licenses giving access to all feature except for Test Manager.
+  * `Basic + Test plans` - Basic features plus access to Test Managers (mostly for QA)
+  * `Stakeholder` - Access to boards etc. Unlimited free licenses for this. No access to code repos.
 * `win1803` - Windows Server Core 1803 image (for running windows containers)
 * Service Connections are part of project settings not organization settings
 ### Artifacts
@@ -206,8 +209,8 @@ stages: [ stage | templateReference ]
 * To reduce costs for cloud-based load testing - limit the number of `virtual user minutes` that the testing uses, because you are charged for the number of VUMs used.
 
 ## Monitoring
-### Azure Log Analytics
 * IT Service Management Connector - allows you to connect Azure and a supported IT Service Management (ITSM) product such as ServiceNow. Ex: when there is an issue a ticket is generated.
+* `Smart Groups` allow you to group similar notifications for less clutter.
 
 ## Others
 ### Azure Automation
@@ -231,7 +234,7 @@ stages: [ stage | templateReference ]
 * Initialize AppCenter with analytics about crashes - `MSAppcenter.start(“{Your App Secret}”, withServices: [MSAnalytics.self, MSCrashes.self ])`
 * Certificate must be in a `.p12` format
 * Distribution Groups
-  * Private - default, Only people invited via email can access releases available to this group.
+  * Private - default, Only people invited via email can access releases available to this group. To use device registration for Apple devices, you are limited to use of non-public, non-shared distribution groups.
   * Public - enables unauthenticated installs from public links.
   * Shared - shared across multiple apps in a single organization, eliminate the need to replicate distribution groups across multiple apps
 * To send App Center analytics to App Insights:
