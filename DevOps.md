@@ -76,7 +76,7 @@
 * Scale pods manually - `kubectl scale --replicas=n deployment/[podname]`
 * The `kubelet` is the primary “node agent” that runs on each node. The kubelet works in terms of a PodSpec. A PodSpec is a YAML or JSON object that describes a pod. The kubelet takes a set of PodSpecs that are provided through various mechanisms (primarily through the apiserver) and ensures that the containers described in those PodSpecs are running and healthy.
 * `Pod disruption budget` - To maintain the availability of applications, define Pod Disruption Budgets (PDBs) to make sure that a minimum number of pods are available in the cluster incase of voluntary disruptions.
-
+* Nodes managed by Azure Automation `DSC` report their status to the built in `pull server`
 
 ## ACR
 * Docker + ACR:
@@ -122,6 +122,8 @@
 * Service Connections are part of project settings not organization settings
 * Azure Pipeline Library
   * Secure Files - se the Secure Files library to store files such as signing certificates, Apple Provisioning Profiles, Android Keystore files, and SSH keys on the server without having to commit them to your source repository. Pipelines can download and use these files using the `Download secure file` task.
+* `ACL` - List of rules to selectively allow or deny access
+* `Deny list` - deny invitations to usera
 ### Artifacts
 * Public Feeds - you need to have a public project to create a public feed. You cannot convert an existing project scoped feed to a public feed.
 * .npmrc (npm config) file:
@@ -172,6 +174,7 @@ stages: [ stage | templateReference ]
   * major version - when you make incompatible API changes
   * minor version - add functionality in a backwards compatible manner
   * patch version - make backwards compatible bug fixes
+  * `GitVersion` and `Semantic release` tasks will automatically update semantic version based on commits etc.
   
 ### CD
 * Pre/Post Deployment Approvals - Manual Intervention
@@ -281,5 +284,6 @@ stages: [ stage | templateReference ]
   * Create a service hook to Trello in Devops
   * Allow Azure Devops permissions in Trello
 * `Azure Site Recovery` will enable you to replicate your VM from a private data center to Azure wihout taking the application offline.
+  
 
 
