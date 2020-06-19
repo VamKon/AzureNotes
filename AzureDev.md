@@ -32,6 +32,10 @@
   batch.Insert(...data);
   table.ExecuteBatch(batch);
   ```
+* Filtering on PartitionKey and RowKey properties
+  ```html
+  https://myaccount.table.core.windows.net/Customers(PartitionKey='MyPartition',RowKey='MyRowKey1')
+  ```
 
 # Azure App Service
 * If `WEBSITES_ENABLE_APP_SERVICE_STORAGE` setting is unspecified or set to true, the /home/ directory will be shared across scale instances, and files written will persist across restarts. Explicitly setting WEBSITES_ENABLE_APP_SERVICE_STORAGE to false will disable the mount.
@@ -39,9 +43,8 @@
 * You are not charged extra for `Deployment slots`
 * `WebJobs` are a feature of Azure App Service that enables you to run a program or script in the same instance of the web app, there is no extra charge.
 * Using docker image:\
-```sh
-az webapp config container set --name [app-name] --resource-group [myResourceGroup] --docker-custom-image-name [azure-container-registry-name].azurecr.io/[mydockerimage]:v1.0.0 --docker-registry-server-url https://[azure-container-registry-name].azurecr.io --docker-registry-server-user [registry-username] --docker-registry-server-password [password]
-```
+`az webapp config container set --name` [app-name] `--resource-group` [myResourceGroup] `--docker-custom-image-name` [azure-container-registry-name].azurecr.io/[mydockerimage]:v1.0.0 `--docker-registry-server-url` https://[azure-container-registry-name].azurecr.io `--docker-registry-server-user` [registry-username] `--docker-registry-server-password` [password]
+
 
 # AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
