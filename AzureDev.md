@@ -38,9 +38,10 @@
 * While using an `Application Gateway (WAF)` - for end to end TLS, trusted Azure Services such as Azure Web Apps do not require adding any additional SSL certs. SSL certs are still required for TLS termination at app gateway.
 * You are not charged extra for `Deployment slots`
 * `WebJobs` are a feature of Azure App Service that enables you to run a program or script in the same instance of the web app, there is no extra charge.
-* Using docker image:
-`az webapp config container set --name` [app-name] `--resource-group` [myResourceGroup] `--docker-custom-image-name` [azure-container-registry-name].azurecr.io/[mydockerimage]:v1.0.0 `--docker-registry-server-url` https://[azure-container-registry-name].azurecr.io `--docker-registry-server-user` [registry-username] `--docker-registry-server-password` [password]
-
+* Using docker image:\
+```sh
+az webapp config container set --name [app-name] --resource-group [myResourceGroup] --docker-custom-image-name [azure-container-registry-name].azurecr.io/[mydockerimage]:v1.0.0 --docker-registry-server-url https://[azure-container-registry-name].azurecr.io --docker-registry-server-user [registry-username] --docker-registry-server-password [password]
+```
 
 # AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
