@@ -8,6 +8,7 @@
 - [AKS](#aks)
 - [Databases & Caches](#databases--caches)
   - [Redis Cache](#redis-cache)
+  - [Cosmos Db](#cosmos-db)
 
 # Messaging
 ## ServiceBus
@@ -36,6 +37,9 @@
   ```html
   https://myaccount.table.core.windows.net/Customers(PartitionKey='MyPartition',RowKey='MyRowKey1')
   ```
+  ```csharp
+  TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "Dave");
+  ```
 
 # Azure App Service
 * If `WEBSITES_ENABLE_APP_SERVICE_STORAGE` setting is unspecified or set to true, the /home/ directory will be shared across scale instances, and files written will persist across restarts. Explicitly setting WEBSITES_ENABLE_APP_SERVICE_STORAGE to false will disable the mount.
@@ -58,3 +62,11 @@ IDatabase cache = Connection.GetDatabase();
 //Invalidating cache
 cache.KeyDelete(string)
 ```
+
+## Cosmos Db
+* [Consistency Levels](https://docs.microsoft.com/en-us/azure/cosmos-db/consistency-levels):
+  * `Strong`: The reads are guaranteed to return the most recent committed version of an item
+  * `Bounded Staleness`: The reads might lag behind writes by at most "K" versions (that is, "updates") of an item or by "T" time interval, whichever is reached first. You have to set these up individually.
+  * `Session`: Within a single client session reads are guaranteed to honor the consistent-prefix. Most widely chosen
+  * `Consistent Prefix`: guarantees that reads never see out-of-order writes
+  * `Eventual`: There's no ordering guarantee for reads. In the absence of any further writes, the replicas eventually converge.
