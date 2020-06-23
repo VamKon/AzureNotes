@@ -9,6 +9,8 @@
 - [Databases & Caches](#databases--caches)
   - [Redis Cache](#redis-cache)
   - [Cosmos Db](#cosmos-db)
+- [Integration Services](#integration-services)
+  - [Azure Logic Apps](#azure-logic-apps)
 
 # Messaging
 ## ServiceBus
@@ -26,6 +28,8 @@
   CloudStorageAccount storage = CloudStorageAccount.Parse(conn_string);
   CloudTableClient table_client = storage.CreateCloudTableClient();
   CloudTable table = table_client.GetTableReference("Customer");
+  TableOperation retreiveOperation = TableOperation.Retreive<CustomerEntity>("[PartitionKey], [RowKey]");
+  TableResult retreivedResult = table.Execute(retreiveOperation);
   ```
 * `TableBatchOperation` - collection of table operations, can contain up to 100.
   ```csharp
@@ -48,7 +52,13 @@
 * `WebJobs` are a feature of Azure App Service that enables you to run a program or script in the same instance of the web app, there is no extra charge.
 * Using docker image:\
 `az webapp config container set --name` [app-name] `--resource-group` [myResourceGroup] `--docker-custom-image-name` [azure-container-registry-name].azurecr.io/[mydockerimage]:v1.0.0 `--docker-registry-server-url` https://[azure-container-registry-name].azurecr.io `--docker-registry-server-user` [registry-username] `--docker-registry-server-password` [password]
-
+* Deploy code from public github repo:\
+  `az webapp deployment source config --name` webappname `--resource-group` myResourceGroup `--repo-url` gitrepourl `--branch` master `--manual-integration` \
+  manual-integration disables automatic sync 
+* App Service Plans:
+  * Free, Shared - run on same VM as other app service plans, cannot scale
+  * Basic, Standard, Premium and Premium V2 - runs on dedicated VMs. Higher the tier more the scaling
+  * Isolated - dedicated VMs, dedicated VNets, provides network and compute isolation, max scale out capabilities.
 
 # AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
@@ -70,3 +80,7 @@ cache.KeyDelete(string)
   * `Session`: Within a single client session reads are guaranteed to honor the consistent-prefix. Most widely chosen
   * `Consistent Prefix`: guarantees that reads never see out-of-order writes
   * `Eventual`: There's no ordering guarantee for reads. In the absence of any further writes, the replicas eventually converge.
+
+# Integration Services
+## Azure Logic Apps
+* `Enterprise Integration Pack` - Connect several logic apps, edit B2B workflows.
