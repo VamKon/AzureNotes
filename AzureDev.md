@@ -11,6 +11,7 @@
   - [Cosmos Db](#cosmos-db)
 - [Integration Services](#integration-services)
   - [Azure Logic Apps](#azure-logic-apps)
+  - [Azure Event Grid](#azure-event-grid)
 
 # Messaging
 ## ServiceBus
@@ -84,3 +85,11 @@ cache.KeyDelete(string)
 # Integration Services
 ## Azure Logic Apps
 * `Enterprise Integration Pack` - Connect several logic apps, edit B2B workflows.
+
+## Azure Event Grid
+* Supports up to 64 KB messages
+* Event Grid `Topic` provides and endpoint where the source sends events.
+  * `System Topics` are those that are provided by other Azure services such as Service Bus, Azure Storage etc.
+  * `Custom Topics` are application and third party topics. Send requests to url like `https://exampletopic.westus2-1.eventgrid.azure.net/api/events?api-version=2018-01-01`
+* Event Grid `Subscription` forwards the messages from a topic to a specified endpoint for handling the event.
+* `Event Handlers` - is the place where an event is sent. Event Handler takes further action to process the event.
