@@ -16,6 +16,8 @@
   - [Azure Logic Apps](#azure-logic-apps)
   - [API Management](#api-management)
 - [Virtual Machines](#virtual-machines)
+- [Security](#security)
+  - [Azure Active Directory](#azure-active-directory)
 
 # Messaging
 ![](images/comparision_message_services.png)
@@ -126,6 +128,10 @@
   ```
   * Lease a blob - `http://127.0.0.1:10000/devstoreaccount1/mycontainer/myblob?comp=lease` gives exclusive write access.
   * If you enable `soft delete` on blobs, both blobs and snapshots can be recovered if deleted.
+  * Using `Azure Active Directory` for security
+    * Register app accessing storage in Azure AD.
+    * Grant your registered app permissions to storage account. To use same user permissions as app use `user_impersonation` permission
+    * This is a `delegated` type permission
 ## Table
 * Operating on tables via code:
   ```csharp
@@ -297,3 +303,39 @@ cache.KeyDelete("key");
   * `New-AzVM`
   * `Get-AzKeyVault`
   * `Set-AzVmDiskEncryptionExtension`
+
+# Security
+## Azure Active Directory
+* [Overview](https://www.youtube.com/watch?v=zjezqZPPOfc&list=PLLasX02E8BPBxGouWlJV-u-XZWOc2RkiX)
+* `Microsoft Identity Platform` is the new name for Azure AD.
+* Uses `OAuth 2.0` or `OpenID Connect`
+* Each app needs to be registered with AAD in App Registrations where following info is collected:
+  * Application Client ID that uniquely iDs your app
+  * A Redirect URI
+  * Few other scenario-specific values.
+  * After app is registered, app communicates with the following endpoints
+  ```
+  https://login.microsoftonline.com/common/oauth2/v2.0/authorize
+  https://login.microsoftonline.com/common/oauth2/v2.0/token
+  ``` 
+* OAuth vs OpenId Connect - OAuth is used for authorization and OpenID Connect (OIDC) is used for authentication. OpenID Connect is built on top of OAuth 2.0, so the terminology and flow are similar between the two.
+* Security Tokens
+  * Access Tokens and Refresh tokens are issued as part of OAuth flow
+  * IDTokens are sent as part of the OpenID connect flow
+* Implicit flow is now the recommended flow
+![](/images/active-directory-oauth-code-spa.png)
+* WebApps can use `OpenID Connect`
+![](images/active-directory-openid-connect-spa.png)
+* WebAPIs using access tokens
+![](images/webapi-auth-access-token.png)
+* `Service Principal` object:
+  * When you register an app with Azure AD and its given permissions to access resources in a tenant the Service Principal object is created. It defines the access policy and permissions for the user/application in the Azure AD tenant.
+* Scopes and permissions
+  * Any web-hosted resource that integrates with AAD has a resource identifier or App ID URI which can define a set of permissions that can be used to define a set of permissions fir dividing the functionality of a resource. In OAuth 2.0 these types of permissions are called `scopes`. A permission is represented in the AAD as a string value. Ex - Read a user's calendar by using Calendars.Read
+* Permission Types
+  * `Delegated permissions` - are used by apps that have a signed-in user present
+  * `Application permissions` - are used by apps that run without a signed-in user present; for example, apps that run as background services or daemons.
+* [Authentication flows and app scenarios](https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-flows-app-scenarios)
+* Multi-tenant applications will allow users from outside the application's home tenant to login to the app. Example login via Google account.
+  * `user.read` scope allows a user to sign in and read his user profile from an app - this is a `delegated` type permission
+* 
