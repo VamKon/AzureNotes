@@ -7,7 +7,11 @@
   - [Blobs](#blobs)
   - [Table](#table)
 - [Azure App Service](#azure-app-service)
-- [AKS](#aks)
+- [Azure Compute Solutions](#azure-compute-solutions)
+  - [Virtual Machines](#virtual-machines)
+  - [AKS](#aks)
+  - [Azure Functions](#azure-functions)
+  - [Azure Container Registry](#azure-container-registry)
 - [Databases & Caches](#databases--caches)
   - [Redis Cache](#redis-cache)
   - [Sql](#sql)
@@ -15,7 +19,6 @@
 - [Integration Services](#integration-services)
   - [Azure Logic Apps](#azure-logic-apps)
   - [API Management](#api-management)
-- [Virtual Machines](#virtual-machines)
 - [Security](#security)
   - [Azure Active Directory](#azure-active-directory)
 
@@ -85,6 +88,7 @@
 
 ## Azure Event Hub
 * Big data pipeline - facilitates capture, retention and replay of telemetry and event stream data. At least once delivery
+* Data sent to even hub can be transformed and stored by using any real-time analytics provider or `batching/storage` adapters.
 
 ## Azure Service Bus
 * Messages - transactions, ordering, duplicate detection and instantaneous consistency
@@ -103,7 +107,10 @@
   }), messageHandlerOptions);
   await queueClient.CloseAsync();
   ```
-
+* Filter conditions for subscriptions:
+  * `Boolean filters` - `TrueFilter` and `FalseFilter` either cause all arriving messages (true) or none of the arriving messages (false) to be selected for the subscription
+  * `SQL Filters` - holds SQL like conditional expressions that is evaluated in the broker against arriving messages. System properties should be prefixed by `sys.` and user defined properties should use `user.`
+  * `Correlation Filter` - Unlike Boolean and SQL filters, this group is used to perform matching against one or more user and system properties in a very efficient way. For system properties ContentType, MessageId, ReplyTo, ReplyToSessionId, SessionId, To, and CorrelationId can be assigned values to filter on.
 # Azure Storage
 ## Blobs
 * V2 accounts support `Azure Storage Events` - pushes events like blob creation/deletion to Azure Event Grid for downstream processing etc.
@@ -177,10 +184,35 @@
   * filter errors in logs - `az webapp log tail --name appname --resource-group myResourceGroup --filter Error`
   * filter specific log types - `az webapp log tail --name appname --resource-group myResourceGroup --path http`
   * enable docker container logs - `az webapp log config --docker-container-logging filesystem --name MyWebapp --resource-group MyResourceGroup`
+* Enabling CORS - `az webapp cors add --allowed-origins https://myapps.com --name MyWebApp --resource-group MyResourceGroup --subscription MySubscription`
+* While deploying a `git repo` via `Kudu`, a `.deployment` file will let you override the deployment by allowing you to specify a project or folder to be deployed. You can also specify the custom deployment script to build and deploy your application.
 
-# AKS
+# Azure Compute Solutions
+## Virtual Machines
+* Creating a VM using disk encryption secured by a key from Azure Key Vault
+  * `New-AzVM`
+  * `Get-AzKeyVault`
+  * `Set-AzVmDiskEncryptionExtension`
+* Creating a custom image based on a VM:
+  * Stop the VM
+  * Set the status of VM to generalized - `Set-AzVm -ResourceGroupName $rgName -Name $vmName -Generalized`
+  * Get the VM - `$vm = Get-AzVM -Name $vmName -ResourceGroupName $rgName`
+  * Create the image config - `$image = New-AzImageConfig -Location $location -SourceVirtualMachineId $vm.Id`
+  * Create the image - `New-AzImage -Image $image -ImageName $imageName -ResourceGroupName $rgName`
+  * Image can be saved as a Blob in Storage
+## AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
 * `KEDA` - Kubernetes Event Driven Architecture
+
+## Azure Functions
+* Authorization levels:
+  * `anonymous` - No API key is required
+  * `function` - function specific API key is required.
+  * `admin` - master key is required.
+
+## Azure Container Registry
+* If you assign a `service principal` to your registry, your application or service can use it for headless authentication.
+* When working directly with ACR from a developer workstation you can authenticate using - `az acr login --name <acrName>`
 
 # Databases & Caches
 ## Redis Cache
@@ -200,6 +232,7 @@ cache.KeyDelete("key");
   * `Always Encrypted` - Data in the database is encrypted at rest, during movement and while data is in use. After configuring only client apps or app servers that have access to keys can access plaintext data. App uses a driver to decrypt sensitive data for display.
 
 ## Cosmos Db
+* Implements APIs for SQL, Cassandra, MongoDB, Gremlin and Azure Table Storage
 * [Consistency Levels](https://docs.microsoft.com/en-us/azure/cosmos-db/consistency-levels):
   * `Strong`: The reads are guaranteed to return the most recent committed version of an item
   * `Bounded Staleness`: The reads might lag behind writes by at most "K" versions (that is, "updates") of an item or by "T" time interval, whichever is reached first. You have to set these up individually.
@@ -272,11 +305,30 @@ cache.KeyDelete("key");
         return income * 0.4;
     }
   ```
-
+* You can move data from Mongo db into CosmosDb using `Azure Database Migration Service`
+* Create a Cosmos account for Table API
+  ```bash
+  az cosmosdb create \
+    -n $accountName \
+    -g $resourceGroupName \
+    --capabilities EnableTable \
+    --default-consistency-level Eventual \
+    --locations regionName='West US 2' failoverPriority=0 isZoneRedundant=False \
+    --locations regionName='East US 2' failoverPriority=1 isZoneRedundant=False
+  ```
+* Create a Table API table
+  ```bash
+  az cosmosdb table create \
+    -a $accountName \
+    -g $resourceGroupName \
+    -n $tableName \
+    --throughput 400
+  ```
 # Integration Services
 
 ## Azure Logic Apps
 * `Enterprise Integration Pack` - Connect several logic apps, edit B2B workflows.
+* To secure Logic Apps with a Vnet we need to use `Integration Service Environment`. When a new ISE it is injected into your Azure VNet enabling direct access to private resources. Other benefits include - highly reliable performance, isolated private storage and predictable pricing.
 
 ## API Management
 * Policies - collection of statements that are executed sequentially on the request or response of an API
@@ -298,11 +350,7 @@ cache.KeyDelete("key");
   </policies>
   ```
 
-# Virtual Machines
-* Creating a VM using disk encryption secured by a key from Azure Key Vault
-  * `New-AzVM`
-  * `Get-AzKeyVault`
-  * `Set-AzVmDiskEncryptionExtension`
+
 
 # Security
 ## Azure Active Directory
@@ -338,4 +386,14 @@ cache.KeyDelete("key");
 * [Authentication flows and app scenarios](https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-flows-app-scenarios)
 * Multi-tenant applications will allow users from outside the application's home tenant to login to the app. Example login via Google account.
   * `user.read` scope allows a user to sign in and read his user profile from an app - this is a `delegated` type permission
-* 
+* Usage via Azure CLI
+  ```bash
+  # create AD group
+  az ad group create --display-name appdev --mail-nickname appdev
+
+  # Assign a role 
+  az role assignment create \
+  --assignee $APPDEV_ID \
+  --role "Azure Kubernetes Service Cluster User Role" \
+  --scope $AKS_ID
+  ```
