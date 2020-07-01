@@ -3,6 +3,8 @@
   - [Azure Event Grid](#azure-event-grid)
   - [Azure Event Hub](#azure-event-hub)
   - [Azure Service Bus](#azure-service-bus)
+    - [Queues](#queues)
+    - [Topics](#topics)
 - [Azure Storage](#azure-storage)
   - [Blobs](#blobs)
   - [Table](#table)
@@ -12,6 +14,8 @@
   - [AKS](#aks)
   - [Azure Functions](#azure-functions)
   - [Azure Container Registry](#azure-container-registry)
+  - [Azure Container Instance](#azure-container-instance)
+  - [Docker](#docker)
 - [Databases & Caches](#databases--caches)
   - [Redis Cache](#redis-cache)
   - [Sql](#sql)
@@ -21,6 +25,8 @@
   - [API Management](#api-management)
 - [Security](#security)
   - [Azure Active Directory](#azure-active-directory)
+  - [Azure Key Vault](#azure-key-vault)
+- [TODO](#todo)
 
 # Messaging
 ![](images/comparision_message_services.png)
@@ -92,6 +98,7 @@
 
 ## Azure Service Bus
 * Messages - transactions, ordering, duplicate detection and instantaneous consistency
+### Queues
 * Queues support a max size of `256 KB`
 * Code to send messages:
   ```csharp
@@ -107,11 +114,32 @@
   }), messageHandlerOptions);
   await queueClient.CloseAsync();
   ```
+### Topics
 * Filter conditions for subscriptions:
   * `Boolean filters` - `TrueFilter` and `FalseFilter` either cause all arriving messages (true) or none of the arriving messages (false) to be selected for the subscription
   * `SQL Filters` - holds SQL like conditional expressions that is evaluated in the broker against arriving messages. System properties should be prefixed by `sys.` and user defined properties should use `user.`
   * `Correlation Filter` - Unlike Boolean and SQL filters, this group is used to perform matching against one or more user and system properties in a very efficient way. For system properties ContentType, MessageId, ReplyTo, ReplyToSessionId, SessionId, To, and CorrelationId can be assigned values to filter on.
+* Retry Mechanisms built-in Service Bus SDK:
+  * `RetryExponential` - Exponentially retries using specified intervals between back offs
+  ```csharp
+  var policy = new RetryExponential(
+    minimumBackoff: TimeSpan.FromSeconds(10),
+    maximumBackoff: TimeSpan.FromSeconds(30),
+    maximumRetryCount: 3);
+  ```
+  * `NoRetry` - Does not retry
 # Azure Storage
+* SAS Tokens
+  * `Account SAS` - These work at a storage account level and use the storage keys.
+  * `Service SAS` - You can define a `stored access policy` on a specific container/file share/queue/table limiting the expiry of the policy and the access. This policy can then be used to create a SAS token. Advantage is that the permissions can be set per container and policy can be revoked independently of the storage key.
+* Geo-redundant replication options:
+  * `Geo-zone redundant storage (GZRS)` - data is replicated across 3 Azure availability zone in primary region and then replicated to secondary region
+  * `Geo-redundant storage (GRS)` - data is replicated 3 times in locally redundant storage in primary region and then replicated to secondary region
+  * Storage Retry Policies related to location (`LocationMode`):
+    * `PrimaryOnly` - Uses primary location only
+    * `PrimaryThenSecondary` - primary first and then secondary if it fails
+    * `SecondaryOnly` - Uses secondary location only
+    * `SecondaryThenPrimary` - secondary first and then primary if it fails
 ## Blobs
 * V2 accounts support `Azure Storage Events` - pushes events like blob creation/deletion to Azure Event Grid for downstream processing etc.
 * `Change Feed Support` - provide transaction logs of all changes to blobs which are ordered, durable and immutable. Apps can read these logs too.
@@ -186,6 +214,9 @@
   * enable docker container logs - `az webapp log config --docker-container-logging filesystem --name MyWebapp --resource-group MyResourceGroup`
 * Enabling CORS - `az webapp cors add --allowed-origins https://myapps.com --name MyWebApp --resource-group MyResourceGroup --subscription MySubscription`
 * While deploying a `git repo` via `Kudu`, a `.deployment` file will let you override the deployment by allowing you to specify a project or folder to be deployed. You can also specify the custom deployment script to build and deploy your application.
+* After authenticating with Facebook application code can retrieve the Facebook token from `X-MS-TOKEN-FACEBOOK-ACCESS-TOKEN` header 
+* `Free` tier does not support custom domains
+* When authenticating with external auth providers like google, facebook etc. - your redirect url should be something like `https://<yourdomain>/.auth/login<providername>/callback`
 
 # Azure Compute Solutions
 ## Virtual Machines
@@ -209,10 +240,19 @@
   * `anonymous` - No API key is required
   * `function` - function specific API key is required.
   * `admin` - master key is required.
+* To change the path for API calls from the default path `/api/xxx` to `/xxx` we need to modify the `host.json` file and alter the `routePrefix` property apart from changing the route template/attribute in code.
+* For functions with `Queue` triggers - it will automatically retry up to 5 times.
 
 ## Azure Container Registry
 * If you assign a `service principal` to your registry, your application or service can use it for headless authentication.
 * When working directly with ACR from a developer workstation you can authenticate using - `az acr login --name <acrName>`
+
+## Azure Container Instance
+* `az container create` - creates a new container instance
+
+## Docker
+* You can only have one `CMD` command in a `dockerfile`
+* `docker tag` - adding a tag is required to push an image to a private registry like ACR
 
 # Databases & Caches
 ## Redis Cache
@@ -230,15 +270,30 @@ cache.KeyDelete("key");
 * Protecting sensitive data
   * `Dynamic Data Masking` - Masks specified data in columns in the UI/presentation layer - queries from SSMS, application data etc. but does not actually change data in the database
   * `Always Encrypted` - Data in the database is encrypted at rest, during movement and while data is in use. After configuring only client apps or app servers that have access to keys can access plaintext data. App uses a driver to decrypt sensitive data for display.
+  * `Azure SQL Database Hyperscale` - A Hyperscale database is a database in SQL Database in the Hyperscale service tier that is backed by the Hyperscale scale-out storage technology. A Hyperscale database supports up to 100 TB of data and provides high throughput and performance, as well as rapid scaling to adapt to the workload requirements. You can also setup up read replicas to offload reads to additional compute replicas.\
+  `az sql db create -g poc-app -s poc-db -n hyperscale1 -e Hyperscale --read-replicas 2` e = edition
+  * Command Behaviour:
+  ```csharp
+  command.ExecuteReader(CommandBehavior.CloseConnection);
+  ```
+    * `CloseConnection` - Closes connection immediately when DataReader object is closed
+    * `Default` - May return multiple result sets
+    * `KeyInfo` - returns column and primary key info
+    * `SchemaOnly` - returns Schema only
+    * `SequentialAccess` - For large binary values, rather than loading entire row enable loading data as a stream
+    * `SingleResult` - query returns a single result
+    * `SingleRow` - Returns a single row of the result set.
+  * Add Sql database to elastic pool - `Set-AZSqlDatabase`
 
 ## Cosmos Db
 * Implements APIs for SQL, Cassandra, MongoDB, Gremlin and Azure Table Storage
+* Hierarchy - Account > Database > Container > Item
 * [Consistency Levels](https://docs.microsoft.com/en-us/azure/cosmos-db/consistency-levels):
   * `Strong`: The reads are guaranteed to return the most recent committed version of an item
   * `Bounded Staleness`: The reads might lag behind writes by at most "K" versions (that is, "updates") of an item or by "T" time interval, whichever is reached first. You have to set these up individually.
   * `Session`: Within a single client session reads are guaranteed to honor the consistent-prefix. Most widely chosen
   * `Consistent Prefix`: guarantees that reads never see out-of-order writes
-  * `Eventual`: There's no ordering guarantee for reads. In the absence of any further writes, the replicas eventually converge.
+  * `Eventual`: There's no ordering guarantee for reads. In the absence of any further writes, the replicas eventually converge. 
 * Cosmos Db with regional failover\
   `az cosmosdb update --name "abc" --resource-group "abc" --locations "South central US"=0 "North Central US"=1 "East US" = 2`
 * Azure Cosmos DB provides language-integrated, transactional execution of JavaScript that lets you write stored procedures, triggers, and user-defined functions (UDFs).
@@ -329,6 +384,9 @@ cache.KeyDelete("key");
 ## Azure Logic Apps
 * `Enterprise Integration Pack` - Connect several logic apps, edit B2B workflows.
 * To secure Logic Apps with a Vnet we need to use `Integration Service Environment`. When a new ISE it is injected into your Azure VNet enabling direct access to private resources. Other benefits include - highly reliable performance, isolated private storage and predictable pricing.
+* Custom Triggers:
+  * `WebHook Trigger` - Logic App creates a custom endpoint for a web app to call to initiate the workflow
+  * `Polling Trigger` - Polls a custom web app endpoint to determine when to start the workflow
 
 ## API Management
 * Policies - collection of statements that are executed sequentially on the request or response of an API
@@ -349,7 +407,12 @@ cache.KeyDelete("key");
   </on-error>
   </policies>
   ```
-
+* Following content must be added to the resources section of a json file for it to be recognized as a `Logic Apps Resource`:
+  ```json
+  {
+    "type": "Microsoft.Logic/workflows"
+  }
+  ```
 
 
 # Security
@@ -397,3 +460,11 @@ cache.KeyDelete("key");
   --role "Azure Kubernetes Service Cluster User Role" \
   --scope $AKS_ID
   ```
+## Azure Key Vault
+* Encrypting using key - `client.EncryptAsync("https://companyA.vault.azure.net/encryptionKey", "RSAOAEP256", securityQuestions);`
+* Update attributes of a key in key vault - `client.UpdateKeyAsync("https://companyA.vault.azure.net/keys/encryptionKey", new[]{"encrypt", "decrypt"})`
+* Update attributes of a secret in key vault - `client.SetSecretAsync("https://companyA.vault.azure.net/keys/encryptionKey", "operations, "encrypt,decrypt")`
+
+
+# TODO
+* Azure Durable Functions
