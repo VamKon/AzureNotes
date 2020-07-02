@@ -7,7 +7,7 @@
     - [Topics](#topics)
 - [Azure Storage](#azure-storage)
   - [Blobs](#blobs)
-  - [Table](#table)
+  - [Queues](#queues-1)
 - [Azure App Service](#azure-app-service)
 - [Azure Compute Solutions](#azure-compute-solutions)
   - [Virtual Machines](#virtual-machines)
@@ -18,6 +18,8 @@
     - [Fan-out/fan-in](#fan-outfan-in)
     - [Async HTTP APIs](#async-http-apis)
     - [Monitoring](#monitoring)
+    - [Human Interaction](#human-interaction)
+    - [Aggregator (stateful entities)](#aggregator-stateful-entities)
   - [Azure Container Registry](#azure-container-registry)
   - [Azure Container Instance](#azure-container-instance)
   - [Docker](#docker)
@@ -31,6 +33,8 @@
 - [Security](#security)
   - [Azure Active Directory](#azure-active-directory)
   - [Azure Key Vault](#azure-key-vault)
+- [Monitor, Troubleshoot and Optimize solutions](#monitor-troubleshoot-and-optimize-solutions)
+  - [CDN](#cdn)
 - [TODO](#todo)
 
 # Messaging
@@ -96,7 +100,8 @@
     }
   ]
   ```
-
+* To register event grid resource provider with Azure to use with other services - `az provider register --namespace Microsoft.EventGrid`. Not all services are registered by default.
+  
 ## Azure Event Hub
 * Big data pipeline - facilitates capture, retention and replay of telemetry and event stream data. At least once delivery
 * Data sent to even hub can be transformed and stored by using any real-time analytics provider or `batching/storage` adapters.
@@ -119,6 +124,7 @@
   }), messageHandlerOptions);
   await queueClient.CloseAsync();
   ```
+
 ### Topics
 * Filter conditions for subscriptions:
   * `Boolean filters` - `TrueFilter` and `FalseFilter` either cause all arriving messages (true) or none of the arriving messages (false) to be selected for the subscription
@@ -172,6 +178,12 @@
     * Register app accessing storage in Azure AD.
     * Grant your registered app permissions to storage account. To use same user permissions as app use `user_impersonation` permission
     * This is a `delegated` type permission
+* ```
+  PUT https://company1.blob.core.windows.net/invoices/3000.pdf?comp=tier
+  x-ms-access-tier: Archive
+  ```
+  This request changes a blob storage tier to Archive, thus making it offline.
+
 ## Table
 * Operating on tables via code:
   ```csharp
@@ -193,6 +205,15 @@
   ```
   ```csharp
   TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "Dave");
+  ```
+## Queues
+* Set visibility timeout - hide items in queue for specified time
+  ```csharp
+  CloudStorageAccount account = CloudStorageAccount.Parse(connectionString);
+  CloudQueueClient client = account.CreateQueueClient();
+  CloudQueue queue = client. GetQueueReference("orders");
+  //De-queue 20 messages and set VisibilityTimeout for those messages to 5 mins. After 5 mins they will be visible again for de-queuing unless deleted.
+  var messages = queue.GetMessages(20, TimeSpan.FromMinutes(5));
   ```
 
 # Azure App Service
@@ -217,12 +238,21 @@
   * filter errors in logs - `az webapp log tail --name appname --resource-group myResourceGroup --filter Error`
   * filter specific log types - `az webapp log tail --name appname --resource-group myResourceGroup --path http`
   * enable docker container logs - `az webapp log config --docker-container-logging filesystem --name MyWebapp --resource-group MyResourceGroup`
+  * `Application Logging (file system)` - will capture traces and messages from app code. Can be accesses from `LogFiles/Application` sub folder of the root folder - once enabled.
+  * `Web Server Logging` - captures HTTP requests using W3C extended log format.
+  * `Detailed Error Messages` - enabling this captures HTTP errors that are returned from requests to web app. These are HTML files which can be downloaded from `LogFiles/DetailedErrors` sub folder of the root folder.
 * Enabling CORS - `az webapp cors add --allowed-origins https://myapps.com --name MyWebApp --resource-group MyResourceGroup --subscription MySubscription`
 * While deploying a `git repo` via `Kudu`, a `.deployment` file will let you override the deployment by allowing you to specify a project or folder to be deployed. You can also specify the custom deployment script to build and deploy your application.
 * After authenticating with Facebook application code can retrieve the Facebook token from `X-MS-TOKEN-FACEBOOK-ACCESS-TOKEN` header 
 * `Free` tier does not support custom domains
 * When authenticating with external auth providers like google, facebook etc. - your redirect url should be something like `https://<yourdomain>/.auth/login<providername>/callback`
 * Configure `swagger` - `services.AddSwaggerGen(c=>c.SwaggerDoc("v1",null));`
+* Create a `WebJob` that will listen for requests until you terminate it
+  ```csharp
+  var config = new JobHostConfiguration();
+  var host = new JobHost(config);
+  host.RunAndBlock();
+  ```
 
 # Azure Compute Solutions
 ## Virtual Machines
@@ -269,11 +299,23 @@
 * To change the path for API calls from the default path `/api/xxx` to `/xxx` we need to modify the `host.json` file and alter the `routePrefix` property apart from changing the route template/attribute in code.
 * For functions with `Queue` triggers - it will automatically retry up to 5 times.
 
+```csharp
+public static class SimpleExample
+{
+    [FunctionName("QueueTrigger")]
+    public static void Run([QueueTrigger("myqueue-items")] string myQueueItem, ILogger log)
+    {
+        log.LogInformation($"C# function processed: {myQueueItem}");
+    }
+}
+```
+
 ## [Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview?tabs=csharp)
 * Function Types
   * `Orchestrator Functions`
     * describe how actions are executed and the order in which actions are executed
     * describe the orchestration in code
+    * code must be deterministic
   * `Activity Functions`
     * are the basic unit of work in a durable function orchestration
     * are the functions and tasks that are orchestrated in the process
@@ -282,6 +324,13 @@
     * can be called either from Client Functions or from Orchestrator Function
   * `Client Functions`
     * starts an orchestrator or entity function
+* `Singleton for orchestrator functions`
+  ```csharp
+  public static async Task<HttpResponseMessage> Start([HttpTrigger(Route="{functionName}")] HttpRequestMessage req, [OrchestrationClient] DurableOrchestrationClient starter, string functionName){
+    
+  }
+  ```
+
 
 ![](images/azure-durable-functions-20190427-16-638.jpg)
 ### Function Chaining
@@ -378,7 +427,7 @@ public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext
     // Perform more work here, or let the orchestration end.
 }
 ```
-* `Human Interaction`
+### Human Interaction
 Includes human interaction/escalations in a workflow
 ```csharp
 [FunctionName("ApprovalWorkflow")]
@@ -403,7 +452,7 @@ public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext
     }
 }
 ```
-* `Aggregator (stateful entities)`
+### Aggregator (stateful entities)
 aggregating event data over a period of time into a single, addressable entity
 ```csharp
 [FunctionName("Counter")]
@@ -425,6 +474,7 @@ public static void Counter([EntityTrigger] IDurableEntityContext ctx)
     }
 }
 ```
+
 ## Azure Container Registry
 * If you assign a `service principal` to your registry, your application or service can use it for headless authentication.
 * When working directly with ACR from a developer workstation you can authenticate using - `az acr login --name <acrName>`
@@ -454,6 +504,10 @@ cache.KeyDelete("key");
   * `Always Encrypted` - Data in the database is encrypted at rest, during movement and while data is in use. After configuring only client apps or app servers that have access to keys can access plaintext data. App uses a driver to decrypt sensitive data for display.
   * `Azure SQL Database Hyperscale` - A Hyperscale database is a database in SQL Database in the Hyperscale service tier that is backed by the Hyperscale scale-out storage technology. A Hyperscale database supports up to 100 TB of data and provides high throughput and performance, as well as rapid scaling to adapt to the workload requirements. You can also setup up read replicas to offload reads to additional compute replicas.\
   `az sql db create -g poc-app -s poc-db -n hyperscale1 -e Hyperscale --read-replicas 2` e = edition
+  * Service Tiers:
+    * `Hyperscale` - Up to 100 TB, scalable
+    * `General purpose` - 8 TB max, low throughput
+    * `Business Critical` - 4 TB max, intensive work loads
   * Command Behaviour:
   ```csharp
   command.ExecuteReader(CommandBehavior.CloseConnection);
@@ -466,6 +520,8 @@ cache.KeyDelete("key");
     * `SingleResult` - query returns a single result
     * `SingleRow` - Returns a single row of the result set.
   * Add Sql database to elastic pool - `Set-AZSqlDatabase`
+  * Sql `CommandType.TableDirect` - Specify a table name to run Sql statement against.
+  * 
 
 ## Cosmos Db
 * Implements APIs for SQL, Cassandra, MongoDB, Gremlin and Azure Table Storage
@@ -571,6 +627,7 @@ cache.KeyDelete("key");
   * `Polling Trigger` - Polls a custom web app endpoint to determine when to start the workflow
 
 ## API Management
+![](images/api_management_how_it_works.JPG)
 * Policies - collection of statements that are executed sequentially on the request or response of an API
   ```xml
   <policies>
@@ -595,7 +652,20 @@ cache.KeyDelete("key");
     "type": "Microsoft.Logic/workflows"
   }
   ```
-
+* Scopes - `Global > Product > API > Operation`
+* Define a policy to restrict calls by bandwidth used:
+  ```xml
+  <policies>
+    <inbound>
+        <base />
+        <quota calls="10000" bandwidth="40000" renewal-period="3600" />
+    </inbound>
+    <outbound>
+        <base />
+    </outbound>
+  </policies>
+  ```
+  renewal-period is defined in `seconds` and bandwidth in `KB`
 
 # Security
 ## Azure Active Directory
@@ -642,11 +712,18 @@ cache.KeyDelete("key");
   --role "Azure Kubernetes Service Cluster User Role" \
   --scope $AKS_ID
   ```
+* `Enterprise application vs App Registration`:
+  * Enterprise application - allows you to integrate other applications for use with Azure AD
+  * App Registration - Allows your app to authenticate using Azure AD.
 ## Azure Key Vault
 * Encrypting using key - `client.EncryptAsync("https://companyA.vault.azure.net/encryptionKey", "RSAOAEP256", securityQuestions);`
 * Update attributes of a key in key vault - `client.UpdateKeyAsync("https://companyA.vault.azure.net/keys/encryptionKey", new[]{"encrypt", "decrypt"})`
 * Update attributes of a secret in key vault - `client.SetSecretAsync("https://companyA.vault.azure.net/keys/encryptionKey", "operations, "encrypt,decrypt")`
+* Get a key from key vault - `client.GetKeyAsync("https://companyA.vault.azure.net", "encryptionKey");`
 
-
+# Monitor, Troubleshoot and Optimize solutions
+## CDN
+* Purging CDN in portal make it immediately get the contents from the site.
 # TODO
-* Azure Durable Functions
+* Event Hub - partitions
+* Event Grid
