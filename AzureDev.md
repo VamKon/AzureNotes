@@ -13,6 +13,9 @@
   - [Virtual Machines](#virtual-machines)
   - [AKS](#aks)
   - [Azure Functions](#azure-functions)
+  - [Azure Durable Functions](#azure-durable-functions)
+    - [Function Chaining](#function-chaining)
+    - [Fan-out/fan-in](#fan-outfan-in)
   - [Azure Container Registry](#azure-container-registry)
   - [Azure Container Instance](#azure-container-instance)
   - [Docker](#docker)
@@ -217,6 +220,7 @@
 * After authenticating with Facebook application code can retrieve the Facebook token from `X-MS-TOKEN-FACEBOOK-ACCESS-TOKEN` header 
 * `Free` tier does not support custom domains
 * When authenticating with external auth providers like google, facebook etc. - your redirect url should be something like `https://<yourdomain>/.auth/login<providername>/callback`
+* Configure `swagger` - `services.AddSwaggerGen(c=>c.SwaggerDoc("v1",null));`
 
 # Azure Compute Solutions
 ## Virtual Machines
@@ -231,6 +235,26 @@
   * Create the image config - `$image = New-AzImageConfig -Location $location -SourceVirtualMachineId $vm.Id`
   * Create the image - `New-AzImage -Image $image -ImageName $imageName -ResourceGroupName $rgName`
   * Image can be saved as a Blob in Storage
+  * To create resources in a loop by concatenating index to differentiate resource names use `copyIndex(int offset)` in the ARM Template
+  ```json
+  {
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "resources": [
+        {
+           .
+           .
+            "name": "[concat('dev',copyIndex(1))]",
+           .
+           .
+            "copy": {
+                "name": "vmCopy",
+                "count": "10"
+            }
+        }
+    ],
+    "outputs": {}
+  }
+  ```
 ## AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
 * `KEDA` - Kubernetes Event Driven Architecture
@@ -242,6 +266,65 @@
   * `admin` - master key is required.
 * To change the path for API calls from the default path `/api/xxx` to `/xxx` we need to modify the `host.json` file and alter the `routePrefix` property apart from changing the route template/attribute in code.
 * For functions with `Queue` triggers - it will automatically retry up to 5 times.
+
+## [Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview?tabs=csharp)
+* Function Types
+  * `Orchestrator Functions`
+    * describe how actions are executed and the order in which actions are executed
+    * describe the orchestration in code
+  * `Activity Functions`
+    * are the basic unit of work in a durable function orchestration
+    * are the functions and tasks that are orchestrated in the process
+  * `Entity Functions`
+    * 
+### Function Chaining
+a sequence of functions executes in a specific order
+```csharp
+[FunctionName("Chaining")]
+public static async Task<object> Run([OrchestrationTrigger] IDurableOrchestrationContext context)
+{
+  try
+  {
+      var x = await context.CallActivityAsync<object>("F1", null);
+      var y = await context.CallActivityAsync<object>("F2", x);
+      return  await context.CallActivityAsync<object>("F3", y);
+  }
+  catch (Exception)
+  {
+      // Error handling or compensation goes here.
+  }
+}
+```
+### Fan-out/fan-in
+you execute multiple functions in parallel and then wait for all functions to finish
+```csharp
+[FunctionName("FanOutFanIn")]
+public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context)
+{
+  var parallelTasks = new List<Task<int>>();
+
+  // Get a list of N work items to process in parallel.
+  object[] workBatch = await context.CallActivityAsync<object[]>("F1", null);
+  for (int i = 0; i < workBatch.Length; i++)
+  {
+      Task<int> task = context.CallActivityAsync<int>("F2", workBatch[i]);
+      parallelTasks.Add(task);
+  }
+
+  await Task.WhenAll(parallelTasks);
+
+  // Aggregate all N outputs and send the result to F3.
+  int sum = parallelTasks.Sum(t => t.Result);
+  await context.CallActivityAsync("F3", sum);
+}
+```
+* `Async HTTP APIs`
+* `Monitoring`
+* `Human Interaction`
+* `Aggregator (stateful entities)`
+  
+![](images/azure-durable-functions-20190427-16-638.jpg)
+
 
 ## Azure Container Registry
 * If you assign a `service principal` to your registry, your application or service can use it for headless authentication.
