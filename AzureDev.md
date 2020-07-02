@@ -16,6 +16,8 @@
   - [Azure Durable Functions](#azure-durable-functions)
     - [Function Chaining](#function-chaining)
     - [Fan-out/fan-in](#fan-outfan-in)
+    - [Async HTTP APIs](#async-http-apis)
+    - [Monitoring](#monitoring)
   - [Azure Container Registry](#azure-container-registry)
   - [Azure Container Instance](#azure-container-instance)
   - [Docker](#docker)
@@ -276,7 +278,12 @@
     * are the basic unit of work in a durable function orchestration
     * are the functions and tasks that are orchestrated in the process
   * `Entity Functions`
-    * 
+    * define operations for reading and updating small pieces of state
+    * can be called either from Client Functions or from Orchestrator Function
+  * `Client Functions`
+    * starts an orchestrator or entity function
+
+![](images/azure-durable-functions-20190427-16-638.jpg)
 ### Function Chaining
 a sequence of functions executes in a specific order
 ```csharp
@@ -318,14 +325,106 @@ public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext
   await context.CallActivityAsync("F3", sum);
 }
 ```
-* `Async HTTP APIs`
-* `Monitoring`
+### Async HTTP APIs
+* addresses the problem of coordinating the state of long-running operations with external clients. 
+* exposes webhook HTTP APIs that query the orchestrator function status.
+```
+> curl -X POST https://myfunc.azurewebsites.net/orchestrators/DoWork -H "Content-Length: 0" -i
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: https://myfunc.azurewebsites.net/runtime/webhooks/durabletask/b79baf67f717453ca9e86c5da21e03ec
+
+{"id":"b79baf67f717453ca9e86c5da21e03ec", ...}
+
+> curl https://myfunc.azurewebsites.net/runtime/webhooks/durabletask/b79baf67f717453ca9e86c5da21e03ec -i
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+Location: https://myfunc.azurewebsites.net/runtime/webhooks/durabletask/b79baf67f717453ca9e86c5da21e03ec
+
+{"runtimeStatus":"Running","lastUpdatedTime":"2019-03-16T21:20:47Z", ...}
+
+> curl https://myfunc.azurewebsites.net/runtime/webhooks/durabletask/b79baf67f717453ca9e86c5da21e03ec -i
+HTTP/1.1 200 OK
+Content-Length: 175
+Content-Type: application/json
+
+{"runtimeStatus":"Completed","lastUpdatedTime":"2019-03-16T21:20:57Z", ...}
+```
+### Monitoring
+refers to a flexible, recurring process in a workflow
+```csharp
+[FunctionName("MonitorJobStatus")]
+public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context)
+{
+    int jobId = context.GetInput<int>();
+    int pollingInterval = GetPollingInterval();
+    DateTime expiryTime = GetExpiryTime();
+
+    while (context.CurrentUtcDateTime < expiryTime)
+    {
+        var jobStatus = await context.CallActivityAsync<string>("GetJobStatus", jobId);
+        if (jobStatus == "Completed")
+        {
+            // Perform an action when a condition is met.
+            await context.CallActivityAsync("SendAlert", machineId);
+            break;
+        }
+
+        // Orchestration sleeps until this time.
+        var nextCheck = context.CurrentUtcDateTime.AddSeconds(pollingInterval);
+        await context.CreateTimer(nextCheck, CancellationToken.None);
+    }
+
+    // Perform more work here, or let the orchestration end.
+}
+```
 * `Human Interaction`
+Includes human interaction/escalations in a workflow
+```csharp
+[FunctionName("ApprovalWorkflow")]
+public static async Task Run([OrchestrationTrigger] IDurableOrchestrationContext context)
+{
+    await context.CallActivityAsync("RequestApproval", null);
+    using (var timeoutCts = new CancellationTokenSource())
+    {
+        DateTime dueTime = context.CurrentUtcDateTime.AddHours(72);
+        Task durableTimeout = context.CreateTimer(dueTime, timeoutCts.Token);
+
+        Task<bool> approvalEvent = context.WaitForExternalEvent<bool>("ApprovalEvent");
+        if (approvalEvent == await Task.WhenAny(approvalEvent, durableTimeout))
+        {
+            timeoutCts.Cancel();
+            await context.CallActivityAsync("ProcessApproval", approvalEvent.Result);
+        }
+        else
+        {
+            await context.CallActivityAsync("Escalate", null);
+        }
+    }
+}
+```
 * `Aggregator (stateful entities)`
-  
-![](images/azure-durable-functions-20190427-16-638.jpg)
-
-
+aggregating event data over a period of time into a single, addressable entity
+```csharp
+[FunctionName("Counter")]
+public static void Counter([EntityTrigger] IDurableEntityContext ctx)
+{
+    int currentValue = ctx.GetState<int>();
+    switch (ctx.OperationName.ToLowerInvariant())
+    {
+        case "add":
+            int amount = ctx.GetInput<int>();
+            ctx.SetState(currentValue + amount);
+            break;
+        case "reset":
+            ctx.SetState(0);
+            break;
+        case "get":
+            ctx.Return(currentValue);
+            break;
+    }
+}
+```
 ## Azure Container Registry
 * If you assign a `service principal` to your registry, your application or service can use it for headless authentication.
 * When working directly with ACR from a developer workstation you can authenticate using - `az acr login --name <acrName>`
