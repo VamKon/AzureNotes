@@ -1,4 +1,4 @@
-# Gotchas for test prep
-Collection of important tidbits of info that will help with test prep
+# Azure Fundamentals
+Collection of important Azure fundamentals
 [DevOps](/DevOps.md)
 [Azure Developer](/AzureDev.md)
