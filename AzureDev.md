@@ -105,6 +105,63 @@
 ## Azure Event Hub
 * Big data pipeline - facilitates capture, retention and replay of telemetry and event stream data. At least once delivery
 * Data sent to even hub can be transformed and stored by using any real-time analytics provider or `batching/storage` adapters.
+* Connection string template - `Endpoint=sb://dummynamespace.servicebus.windows.net;EntityPath=EVENT_HUB_NAME;SharedAccessKeyName=SHARED_ACCESS_KEY_NAME;SharedAccessKey=SHARED_ACCESS_KEY`
+* Send events to Event Hub:
+```csharp
+using Microsoft.Azure.EventHubs;
+
+var connectionStringBuilder = new EventHubsConnectionStringBuilder(EventHubConnectionString)
+eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
+await eventHubClient.CloseAsync();
+```
+* Receive events from Event Hub
+  * Need to use EventProcessorHost .net calls which manages receiving events from hub. This class requires a storage account to store the persistent checkpoints.
+  ```csharp
+  public class SimpleEventProcessor : IEventProcessor
+  {
+    public Task CloseAsync(PartitionContext context, CloseReason reason)
+    {
+        Console.WriteLine($"Processor Shutting Down. Partition '{context.PartitionId}', Reason: '{reason}'.");
+        return Task.CompletedTask;
+    }
+
+    public Task OpenAsync(PartitionContext context)
+    {
+        Console.WriteLine($"SimpleEventProcessor initialized. Partition: '{context.PartitionId}'");
+        return Task.CompletedTask;
+    }
+
+    public Task ProcessErrorAsync(PartitionContext context, Exception error)
+    {
+        Console.WriteLine($"Error on Partition: {context.PartitionId}, Error: {error.Message}");
+        return Task.CompletedTask;
+    }
+
+    public Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
+    {
+        foreach (var eventData in messages)
+        {
+            var data = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
+            Console.WriteLine($"Message received. Partition: '{context.PartitionId}', Data: '{data}'");
+        }
+
+        return context.CheckpointAsync();
+    }
+  }
+  ```
+  ```csharp
+  var eventProcessorHost = new EventProcessorHost(
+                EventHubName,
+                PartitionReceiver.DefaultConsumerGroupName,
+                EventHubConnectionString,
+                StorageConnectionString,
+                StorageContainerName);
+  // Registers the Event Processor Host and starts receiving messages
+  await eventProcessorHost.RegisterEventProcessorAsync<SimpleEventProcessor>();
+  // Disposes of the Event Processor Host
+  await eventProcessorHost.UnregisterEventProcessorAsync();
+  ```
 
 ## Azure Service Bus
 * Messages - transactions, ordering, duplicate detection and instantaneous consistency
@@ -183,6 +240,7 @@
   x-ms-access-tier: Archive
   ```
   This request changes a blob storage tier to Archive, thus making it offline.
+* Update metadata with HTTP request - `PUT https://myaccount.blob.core.windows.net/mycontainer/myblob?comp=metadata`
 
 ## Table
 * Operating on tables via code:
@@ -287,6 +345,7 @@
     "outputs": {}
   }
   ```
+* Open a port via CLI - `az vm open-port --port 80 --resource-group dev-rg --name dev1`
 ## AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
 * `KEDA` - Kubernetes Event Driven Architecture
@@ -666,7 +725,17 @@ cache.KeyDelete("key");
   </policies>
   ```
   renewal-period is defined in `seconds` and bandwidth in `KB`
-
+* Access restriction policies:
+  * `check-header` policy - enforce that a request has specified HTTP header
+  * `rate-limit` policy - limit call rate to a specified number
+  * `rate-limit-by-key` policy - limit call rate by a key to a specified number. ex - limit calls per IP address for an hour.
+  * `ip-filter` - only allow calls from specified ip address range
+  * `quota` - limit by call volume or bandwidth by subscription. The renewal period cannot be less than 3600
+  * `quota-by-key` - limit by call volume or bandwidth by a key - key can be ip address etc.
+  * `validate-jwt` - enforces existence and validity of a jwt token
+* `Versions` vs `Revisions`
+  * Version - allows you to expose breaking changes, requires publishing.
+  * Revision - allows you to add non-breaking changes, such as addition of operations. Users can access by using a different query string at the same endpoint.
 # Security
 ## Azure Active Directory
 * [Overview](https://www.youtube.com/watch?v=zjezqZPPOfc&list=PLLasX02E8BPBxGouWlJV-u-XZWOc2RkiX)
@@ -715,6 +784,11 @@ cache.KeyDelete("key");
 * `Enterprise application vs App Registration`:
   * Enterprise application - allows you to integrate other applications for use with Azure AD
   * App Registration - Allows your app to authenticate using Azure AD.
+* `Public` vs `Confidential clients`
+  * `Public Client` - are apps that run on devices or desktop computers or in a web browser. They're not trusted to safely keep application secrets, so they only access web APIs on behalf of the user.
+  * `Confidential client` - are apps that run on servers (web apps, web API apps, or even service/daemon apps).
+* [MSAL initializing client apps](https://docs.microsoft.com/en-us/azure/active-directory/develop/msal-net-initializing-client-applications)
+  
 ## Azure Key Vault
 * Encrypting using key - `client.EncryptAsync("https://companyA.vault.azure.net/encryptionKey", "RSAOAEP256", securityQuestions);`
 * Update attributes of a key in key vault - `client.UpdateKeyAsync("https://companyA.vault.azure.net/keys/encryptionKey", new[]{"encrypt", "decrypt"})`
@@ -724,6 +798,8 @@ cache.KeyDelete("key");
 # Monitor, Troubleshoot and Optimize solutions
 ## CDN
 * Purging CDN in portal make it immediately get the contents from the site.
+* To add and endpoint:
+  * Set Origin type to `Custom Origin` if you are trying to cache from your own custom domain. If you choose other options Azure will automatically set the origin name to <your_resource_name>.<resource_type>.core.windows.net. Ex - if you choose storage - origin will be set to mystorageaccount.blob.core.windows.net 
 # TODO
 * Event Hub - partitions
 * Event Grid
