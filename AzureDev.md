@@ -44,6 +44,7 @@
   
 ## Storage Queues
 * Support a max of `64 KB`
+* Retreiving message from queue, takes it offline for 30 seconds. So, you need to delete after retreiving message if you don't want that message to be picked up by another client.
 
 ## Azure Event Grid
 * Supports up to 64 KB messages
