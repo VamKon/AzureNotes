@@ -186,7 +186,7 @@ await eventHubClient.CloseAsync();
 * Filter conditions for subscriptions:
   * `Boolean filters` - `TrueFilter` and `FalseFilter` either cause all arriving messages (true) or none of the arriving messages (false) to be selected for the subscription
   * `SQL Filters` - holds SQL like conditional expressions that is evaluated in the broker against arriving messages. System properties should be prefixed by `sys.` and user defined properties should use `user.`
-  * `Correlation Filter` - Unlike Boolean and SQL filters, this group is used to perform matching against one or more user and system properties in a very efficient way. For system properties ContentType, MessageId, ReplyTo, ReplyToSessionId, SessionId, To, and CorrelationId can be assigned values to filter on.
+  * `Correlation Filter` - Unlike Boolean and SQL filters, this group is used to perform matching against one or more user and system properties in a very efficient way. Only works for checking equality. For system properties ContentType, MessageId, ReplyTo, ReplyToSessionId, SessionId, To, and CorrelationId can be assigned values to filter on.
 * Retry Mechanisms built-in Service Bus SDK:
   * `RetryExponential` - Exponentially retries using specified intervals between back offs
   ```csharp
