@@ -162,7 +162,7 @@ await eventHubClient.CloseAsync();
   // Disposes of the Event Processor Host
   await eventProcessorHost.UnregisterEventProcessorAsync();
   ```
-
+* `Partitions` - you can have between 2 and 32 partitions.
 ## Azure Service Bus
 * Messages - transactions, ordering, duplicate detection and instantaneous consistency
 ### Queues
@@ -736,7 +736,10 @@ cache.KeyDelete("key");
 * `Versions` vs `Revisions`
   * Version - allows you to expose breaking changes, requires publishing.
   * Revision - allows you to add non-breaking changes, such as addition of operations. Users can access by using a different query string at the same endpoint.
+* Create an instance - `New-AzApiManagement -ResourceGroupName` "myResourceGroup" `-Location` "West US" `-Name` "apim-name" `-Organization` "myOrganization" `-AdminEmail` "myEmail" `-Sku` "Developer"
+  
 # Security
+
 ## Azure Active Directory
 * [Overview](https://www.youtube.com/watch?v=zjezqZPPOfc&list=PLLasX02E8BPBxGouWlJV-u-XZWOc2RkiX)
 * `Microsoft Identity Platform` is the new name for Azure AD.
@@ -788,7 +791,10 @@ cache.KeyDelete("key");
   * `Public Client` - are apps that run on devices or desktop computers or in a web browser. They're not trusted to safely keep application secrets, so they only access web APIs on behalf of the user.
   * `Confidential client` - are apps that run on servers (web apps, web API apps, or even service/daemon apps).
 * [MSAL initializing client apps](https://docs.microsoft.com/en-us/azure/active-directory/develop/msal-net-initializing-client-applications)
-  
+* `Enabling Multi Factor Authentication`:
+  * Needs Azure AD premium
+  * Create a conditional access policy
+*   
 ## Azure Key Vault
 * Encrypting using key - `client.EncryptAsync("https://companyA.vault.azure.net/encryptionKey", "RSAOAEP256", securityQuestions);`
 * Update attributes of a key in key vault - `client.UpdateKeyAsync("https://companyA.vault.azure.net/keys/encryptionKey", new[]{"encrypt", "decrypt"})`
