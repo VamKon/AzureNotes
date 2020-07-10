@@ -5,6 +5,7 @@
   - [Azure Service Bus](#azure-service-bus)
     - [Queues](#queues)
     - [Topics](#topics)
+  - [Notification Hubs](#notification-hubs)
 - [Azure Storage](#azure-storage)
   - [Blobs](#blobs)
   - [Queues](#queues-1)
@@ -35,7 +36,6 @@
   - [Azure Key Vault](#azure-key-vault)
 - [Monitor, Troubleshoot and Optimize solutions](#monitor-troubleshoot-and-optimize-solutions)
   - [CDN](#cdn)
-- [TODO](#todo)
 
 # Messaging
 ![](images/comparision_message_services.png)
@@ -113,6 +113,7 @@ using Microsoft.Azure.EventHubs;
 
 var connectionStringBuilder = new EventHubsConnectionStringBuilder(EventHubConnectionString)
 eventHubClient = EventHubClient.CreateFromConnectionString(connectionStringBuilder.ToString());
+//You have to send data as a byte array in EventData object. Which is why you are extracting bytearray from a string using GetBytes
 await eventHubClient.SendAsync(new EventData(Encoding.UTF8.GetBytes(message)));
 await eventHubClient.CloseAsync();
 ```
@@ -197,6 +198,16 @@ await eventHubClient.CloseAsync();
     maximumRetryCount: 3);
   ```
   * `NoRetry` - Does not retry
+* Send messages to a topic:
+  ```csharp
+  static async Task SendMessage(string connectionString, string entityPath, byte[] message)
+  {
+    var client = new TopicClient(connectionString, entityPath);
+    await client.SendAsync(new Message(message));
+  }
+  ```
+## Notification Hubs
+* One namespace can have multiple notification hubs. A hub represents a push resource for one app.
 # Azure Storage
 * SAS Tokens
   * `Account SAS` - These work at a storage account level and use the storage keys.
@@ -206,9 +217,10 @@ await eventHubClient.CloseAsync();
   * `Geo-redundant storage (GRS)` - data is replicated 3 times in locally redundant storage in primary region and then replicated to secondary region
   * Storage Retry Policies related to location (`LocationMode`):
     * `PrimaryOnly` - Uses primary location only
-    * `PrimaryThenSecondary` - primary first and then secondary if it fails
+    * `PrimaryThenSecondary` - primary first and then secondary if it fails. You have to define the default request option for this mode, or the default becomes PrimaryOnly. 
     * `SecondaryOnly` - Uses secondary location only
     * `SecondaryThenPrimary` - secondary first and then primary if it fails
+    * Secondary modes can only be used with RA-GRS or RA-GZRS replication options.
 ## Blobs
 * V2 accounts support `Azure Storage Events` - pushes events like blob creation/deletion to Azure Event Grid for downstream processing etc.
 * `Change Feed Support` - provide transaction logs of all changes to blobs which are ordered, durable and immutable. Apps can read these logs too.
@@ -230,19 +242,19 @@ await eventHubClient.CloseAsync();
       download.Content.CopyTo(file);
   }
   ```
-  * Lease a blob - `http://127.0.0.1:10000/devstoreaccount1/mycontainer/myblob?comp=lease` gives exclusive write access.
-  * If you enable `soft delete` on blobs, both blobs and snapshots can be recovered if deleted.
-  * Using `Azure Active Directory` for security
-    * Register app accessing storage in Azure AD.
-    * Grant your registered app permissions to storage account. To use same user permissions as app use `user_impersonation` permission
-    * This is a `delegated` type permission
+* Lease a blob - `http://127.0.0.1:10000/devstoreaccount1/mycontainer/myblob?comp=lease` gives exclusive write access.
+* If you enable `soft delete` on blobs, both blobs and snapshots can be recovered if deleted.
+* Using `Azure Active Directory` for security
+  * Register app accessing storage in Azure AD.
+  * Grant your registered app permissions to storage account. To use same user permissions as app use `user_impersonation` permission
+  * This is a `delegated` type permission
 * ```
   PUT https://company1.blob.core.windows.net/invoices/3000.pdf?comp=tier
   x-ms-access-tier: Archive
   ```
   This request changes a blob storage tier to Archive, thus making it offline.
 * Update metadata with HTTP request - `PUT https://myaccount.blob.core.windows.net/mycontainer/myblob?comp=metadata`
-
+* To retrieve a blob from its snapshot - `https://myaccount.blobl.core.windows.net/mycontainer/myblob?snapshot=[date and time]`
 ## Table
 * Operating on tables via code:
   ```csharp
@@ -279,7 +291,6 @@ await eventHubClient.CloseAsync();
 * If `WEBSITES_ENABLE_APP_SERVICE_STORAGE` setting is unspecified or set to true, the /home/ directory will be shared across scale instances, and files written will persist across restarts. Explicitly setting WEBSITES_ENABLE_APP_SERVICE_STORAGE to false will disable the mount.
 * While using an `Application Gateway (WAF)` - for end to end TLS, trusted Azure Services such as Azure Web Apps do not require adding any additional SSL certs. SSL certs are still required for TLS termination at app gateway.
 * You are not charged extra for `Deployment slots`
-* `WebJobs` are a feature of Azure App Service that enables you to run a program or script in the same instance of the web app, there is no extra charge.
 * Using docker image:\
 `az webapp config container set --name` [app-name] `--resource-group` [myResourceGroup] `--docker-custom-image-name` [azure-container-registry-name].azurecr.io/[mydockerimage]:v1.0.0 `--docker-registry-server-url` https://[azure-container-registry-name].azurecr.io `--docker-registry-server-user` [registry-username] `--docker-registry-server-password` [password]
 * Deploy code from public github repo:\
@@ -306,13 +317,28 @@ await eventHubClient.CloseAsync();
 * `Free` tier does not support custom domains
 * When authenticating with external auth providers like google, facebook etc. - your redirect url should be something like `https://<yourdomain>/.auth/login<providername>/callback`
 * Configure `swagger` - `services.AddSwaggerGen(c=>c.SwaggerDoc("v1",null));`
-* Create a `WebJob` that will listen for requests until you terminate it
+* WebJobs
+  * Create a `WebJob` that will listen for requests until you terminate it
   ```csharp
   var config = new JobHostConfiguration();
   var host = new JobHost(config);
-  host.RunAndBlock();
+  if(runandBlock)
+  {
+    //this will listen for requests until you terminate
+    host.RunAndBlock();
+  }
+  else
+  {
+    //this will start and immediately terminate
+    host.Start();
+  }
   ```
-
+  * `IHost.Start()` - starts the host for listening on a url
+  * `IHost.Run()` - run manually
+* `Shared Session State` - store session so that multiple instances can access session:
+  * Cosmos Db No Sql datastore is not supported
+  * Premium Redis cache is supported
+* To export key-value App Settings to a local json file - `az appconfig kv export --name myDevAppConfigStore --file ~/DevFix.json`
 # Azure Compute Solutions
 ## Virtual Machines
 * Creating a VM using disk encryption secured by a key from Azure Key Vault
@@ -363,12 +389,13 @@ await eventHubClient.CloseAsync();
 public static class SimpleExample
 {
     [FunctionName("QueueTrigger")]
-    public static void Run([QueueTrigger("myqueue-items")] string myQueueItem, ILogger log)
+    public static void Run([QueueTrigger("myqueue-items")] string myQueueItem, [Blob("orders/{id}",FileAccess.Write)]Stream order, ILogger log)
     {
         log.LogInformation($"C# function processed: {myQueueItem}");
     }
 }
 ```
+* Premium plan supports pre-warmed instances.
 
 ## [Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview?tabs=csharp)
 * Function Types
@@ -538,6 +565,12 @@ public static void Counter([EntityTrigger] IDurableEntityContext ctx)
 ## Azure Container Registry
 * If you assign a `service principal` to your registry, your application or service can use it for headless authentication.
 * When working directly with ACR from a developer workstation you can authenticate using - `az acr login --name <acrName>`
+* Importing an image into ACR - `az acr import --name myreg1 --source mcr.microsoft.com/windows/servercore:latest -t servercore:latest
+* Commands
+  * `az acr build` - create a container image
+  * `az acr import` - import a container image
+  * `az acr create` - create an ACR
+  * `az acr update` - update parameters for an ACR
 
 ## Azure Container Instance
 * `az container create` - creates a new container instance
@@ -558,34 +591,46 @@ cache.StringGet("key");
 //Invalidating cache
 cache.KeyDelete("key");
 ```
+* Get no. of connected clients - `var info = database.Execute("INFO")` - returns a key value pair list and no. of connected clients is one of them.
+* To verify connection with Redis:
+  ```csharp
+  IDatabase database = ConnectionMultiplexer.Connect(connectionString).GetDatabase();
+  var result = database.Execute("PING").TOString();
+  //If there are not connectivity issues a PONG response is received.
+  ```
+  
 ## Sql
 * Protecting sensitive data
   * `Dynamic Data Masking` - Masks specified data in columns in the UI/presentation layer - queries from SSMS, application data etc. but does not actually change data in the database
   * `Always Encrypted` - Data in the database is encrypted at rest, during movement and while data is in use. After configuring only client apps or app servers that have access to keys can access plaintext data. App uses a driver to decrypt sensitive data for display.
-  * `Azure SQL Database Hyperscale` - A Hyperscale database is a database in SQL Database in the Hyperscale service tier that is backed by the Hyperscale scale-out storage technology. A Hyperscale database supports up to 100 TB of data and provides high throughput and performance, as well as rapid scaling to adapt to the workload requirements. You can also setup up read replicas to offload reads to additional compute replicas.\
-  `az sql db create -g poc-app -s poc-db -n hyperscale1 -e Hyperscale --read-replicas 2` e = edition
-  * Service Tiers:
-    * `Hyperscale` - Up to 100 TB, scalable
-    * `General purpose` - 8 TB max, low throughput
-    * `Business Critical` - 4 TB max, intensive work loads
-  * Command Behaviour:
+* `Azure SQL Database Hyperscale` - A Hyperscale database is a database in SQL Database in the Hyperscale service tier that is backed by the Hyperscale scale-out storage technology. A Hyperscale database supports up to 100 TB of data and provides high throughput and performance, as well as rapid scaling to adapt to the workload requirements. You can also setup up read replicas to offload reads to additional compute replicas.\
+`az sql db create -g poc-app -s poc-db -n hyperscale1 -e Hyperscale --read-replicas 2` e = edition
+* Service Tiers:
+  * `Hyperscale` - Up to 100 TB, scalable
+  * `General purpose` - 8 TB max, low throughput
+  * `Business Critical` - 4 TB max, intensive work loads
+* Command Behaviour:
   ```csharp
   command.ExecuteReader(CommandBehavior.CloseConnection);
   ```
-    * `CloseConnection` - Closes connection immediately when DataReader object is closed
-    * `Default` - May return multiple result sets
-    * `KeyInfo` - returns column and primary key info
-    * `SchemaOnly` - returns Schema only
-    * `SequentialAccess` - For large binary values, rather than loading entire row enable loading data as a stream
-    * `SingleResult` - query returns a single result
-    * `SingleRow` - Returns a single row of the result set.
-  * Add Sql database to elastic pool - `Set-AZSqlDatabase`
-  * Sql `CommandType.TableDirect` - Specify a table name to run Sql statement against.
-  * 
+
+  * `CloseConnection` - Closes connection immediately when DataReader object is closed
+  * `Default` - May return multiple result sets
+  * `KeyInfo` - returns column and primary key info
+  * `SchemaOnly` - returns Schema only
+  * `SequentialAccess` - For large binary values, rather than loading entire row enable loading data as a stream
+  * `SingleResult` - query returns a single result
+  * `SingleRow` - Returns a single row of the result set.
+* Add Sql database to elastic pool - `Set-AZSqlDatabase`
+* Sql `CommandType.TableDirect` - Specify a table name to run Sql statement against.
+* `Pricing Models`:
+  * `DTU-based` - Offers a simplified set of configured bundles that contain compute and storage resources. Will be billed for idle time. No serverless option
+  * `vCore based` - You can tailor compute and storage. Offers serverless option, will be billed for CPU and storage during use only.
 
 ## Cosmos Db
 * Implements APIs for SQL, Cassandra, MongoDB, Gremlin and Azure Table Storage
-* Hierarchy - Account > Database > Container > Item
+* Hierarchy:
+  ![](images/cosmos-entities.png)
 * [Consistency Levels](https://docs.microsoft.com/en-us/azure/cosmos-db/consistency-levels):
   * `Strong`: The reads are guaranteed to return the most recent committed version of an item
   * `Bounded Staleness`: The reads might lag behind writes by at most "K" versions (that is, "updates") of an item or by "T" time interval, whichever is reached first. You have to set these up individually.
@@ -677,6 +722,17 @@ cache.KeyDelete("key");
     -n $tableName \
     --throughput 400
   ```
+* Retrieve first item in an items container:
+  ```csharp
+  DocumentClient dc = new DocumentClient(uri, accessKey);
+  var tasks = dc.CreateDatabaseQuery().Where(d => d.Id == "Tasks").AsEnumerable().First();
+  var items = dc.CreateDocumentCollectionQuery(tasks.SelfLink).Where(d => d.Id == "Items").AsEnumerable().First();
+  var item = dc.CreateDocumentQuery(items.SelfLink).AsEnumerable().First();
+  ```
+* Sample query - `Select * from receipts r where r.category = "Lodging"`
+* Output formats:
+  * Sql API - JSON
+  * Table API - table structured as rows and columns
 # Integration Services
 
 ## Azure Logic Apps
@@ -685,6 +741,7 @@ cache.KeyDelete("key");
 * Custom Triggers:
   * `WebHook Trigger` - Logic App creates a custom endpoint for a web app to call to initiate the workflow
   * `Polling Trigger` - Polls a custom web app endpoint to determine when to start the workflow
+* For-each action iterates its items in `parallel` by default. But actions inside the loop are sequential by default. Also, by default if there is an error in one run, only that run is effected.
 
 ## API Management
 ![](images/api_management_how_it_works.JPG)
@@ -738,6 +795,11 @@ cache.KeyDelete("key");
   * Version - allows you to expose breaking changes, requires publishing.
   * Revision - allows you to add non-breaking changes, such as addition of operations. Users can access by using a different query string at the same endpoint.
 * Create an instance - `New-AzApiManagement -ResourceGroupName` "myResourceGroup" `-Location` "West US" `-Name` "apim-name" `-Organization` "myOrganization" `-AdminEmail` "myEmail" `-Sku` "Developer"
+* You can set up `Mock` API responses to cache responses.
+* To use an API outside of developer portal:
+  * API must be added to a product
+  * `Ocp_Apim-Subscription-Key` header must be part of the Http request. This allows APIM to determine if a subscriber has permissions to call an API
+* API authentication policies to authenticate with a backend service - `Basic, Client certificate and Managed identity`
   
 # Security
 
@@ -772,8 +834,9 @@ cache.KeyDelete("key");
   * `Delegated permissions` - are used by apps that have a signed-in user present
   * `Application permissions` - are used by apps that run without a signed-in user present; for example, apps that run as background services or daemons.
 * [Authentication flows and app scenarios](https://docs.microsoft.com/en-us/azure/active-directory/develop/authentication-flows-app-scenarios)
-* Multi-tenant applications will allow users from outside the application's home tenant to login to the app. Example login via Google account.
+* `Multi-tenant` applications will allow users from outside the application's home tenant to login to the app. Example login via Google account.
   * `user.read` scope allows a user to sign in and read his user profile from an app - this is a `delegated` type permission
+* To support logins from AD and external auth providers select `Multi-tenant and personal` account type
 * Usage via Azure CLI
   ```bash
   # create AD group
@@ -795,18 +858,18 @@ cache.KeyDelete("key");
 * `Enabling Multi Factor Authentication`:
   * Needs Azure AD premium
   * Create a conditional access policy
-*   
+* `Managed identity types`:
+  * `System assigned` - Automatically created when an resource is created (ex: a VM), lifecycle is tied to the resource - deleted when resource is deleted.
+  * `User assigned` - Explicitly created, standalone resource, has to be deleted manually.
 ## Azure Key Vault
 * Encrypting using key - `client.EncryptAsync("https://companyA.vault.azure.net/encryptionKey", "RSAOAEP256", securityQuestions);`
 * Update attributes of a key in key vault - `client.UpdateKeyAsync("https://companyA.vault.azure.net/keys/encryptionKey", new[]{"encrypt", "decrypt"})`
-* Update attributes of a secret in key vault - `client.SetSecretAsync("https://companyA.vault.azure.net/keys/encryptionKey", "operations, "encrypt,decrypt")`
 * Get a key from key vault - `client.GetKeyAsync("https://companyA.vault.azure.net", "encryptionKey");`
+* Update attributes of a secret in key vault - `client.SetSecretAsync("https://companyA.vault.azure.net/keys/encryptionKey", "operations, "encrypt,decrypt")`
+* Update secret - `client.SetSecretAsync("https://companyA.vault.azure.net", "paymentsApiKey", "someValue")`
 
 # Monitor, Troubleshoot and Optimize solutions
 ## CDN
 * Purging CDN in portal make it immediately get the contents from the site.
 * To add and endpoint:
   * Set Origin type to `Custom Origin` if you are trying to cache from your own custom domain. If you choose other options Azure will automatically set the origin name to <your_resource_name>.<resource_type>.core.windows.net. Ex - if you choose storage - origin will be set to mystorageaccount.blob.core.windows.net 
-# TODO
-* Event Hub - partitions
-* Event Grid
