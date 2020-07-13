@@ -373,6 +373,9 @@ await eventHubClient.CloseAsync();
   }
   ```
 * Open a port via CLI - `az vm open-port --port 80 --resource-group dev-rg --name dev1`
+* `New-AZUserAssignedIdentity` - To create a user-assigned management identity
+* `Update-AZVM` - associate existing identity with VM.
+* `Update-AZVM -IdentityType` - Accepted values are SystemAssigned, UserAssigned, SystemAssignedUserAssigned. - will only assign the IdentityType specified in the flag.
 ## AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
 * `KEDA` - Kubernetes Event Driven Architecture
@@ -396,6 +399,8 @@ public static class SimpleExample
 }
 ```
 * Premium plan supports pre-warmed instances.
+* `NCRONTAB expression` - {second} {minute} {hour} {day} {month} {dayofweek}
+  * Every 3 hours - "0 0 */3 * * *"
 
 ## [Azure Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview?tabs=csharp)
 * Function Types
