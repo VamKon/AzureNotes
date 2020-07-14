@@ -32,10 +32,12 @@
   - [Azure Logic Apps](#azure-logic-apps)
   - [API Management](#api-management)
 - [Security](#security)
+  - [.net Application](#net-application)
   - [Azure Active Directory](#azure-active-directory)
   - [Azure Key Vault](#azure-key-vault)
 - [Monitor, Troubleshoot and Optimize solutions](#monitor-troubleshoot-and-optimize-solutions)
   - [CDN](#cdn)
+  - [Application Insights](#application-insights)
 
 # Messaging
 ![](images/comparision_message_services.png)
@@ -311,6 +313,7 @@ await eventHubClient.CloseAsync();
   * `Application Logging (file system)` - will capture traces and messages from app code. Can be accesses from `LogFiles/Application` sub folder of the root folder - once enabled.
   * `Web Server Logging` - captures HTTP requests using W3C extended log format.
   * `Detailed Error Messages` - enabling this captures HTTP errors that are returned from requests to web app. These are HTML files which can be downloaded from `LogFiles/DetailedErrors` sub folder of the root folder.
+* Enable `AppServiceAppLogs` under diagnostic settings and set the destination to send logs to Log Analytics.
 * Enabling CORS - `az webapp cors add --allowed-origins https://myapps.com --name MyWebApp --resource-group MyResourceGroup --subscription MySubscription`
 * While deploying a `git repo` via `Kudu`, a `.deployment` file will let you override the deployment by allowing you to specify a project or folder to be deployed. You can also specify the custom deployment script to build and deploy your application.
 * After authenticating with Facebook application code can retrieve the Facebook token from `X-MS-TOKEN-FACEBOOK-ACCESS-TOKEN` header 
@@ -376,6 +379,7 @@ await eventHubClient.CloseAsync();
 * `New-AZUserAssignedIdentity` - To create a user-assigned management identity
 * `Update-AZVM` - associate existing identity with VM.
 * `Update-AZVM -IdentityType` - Accepted values are SystemAssigned, UserAssigned, SystemAssignedUserAssigned. - will only assign the IdentityType specified in the flag.
+* Virtual machines *do not support* `TPM disk images`
 ## AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
 * `KEDA` - Kubernetes Event Driven Architecture
@@ -579,6 +583,7 @@ public static void Counter([EntityTrigger] IDurableEntityContext ctx)
 
 ## Azure Container Instance
 * `az container create` - creates a new container instance
+* `ACI Container Groups` - provide capability to host a set of containers on the same host machine
 
 ## Docker
 * You can only have one `CMD` command in a `dockerfile`
@@ -738,6 +743,15 @@ cache.KeyDelete("key");
 * Output formats:
   * Sql API - JSON
   * Table API - table structured as rows and columns
+* `Throughput provisioning`
+  * Set through put on a container - when you know the specific performance requirements for that container
+  * Set through put on a database - when scaling requirements are not known for specific containers and you want the database to scale and handle traffic.
+* `Roles`:
+  * Account Contributor - Can manage Cosmos DB accounts
+  * DB Account Reader - can read data
+  * Backup Operator - can submit restore request
+  * DB operator - Can provision accounts, dbs and containers but cannot access data
+* `Gremlin API` - graph data
 # Integration Services
 
 ## Azure Logic Apps
@@ -790,11 +804,11 @@ cache.KeyDelete("key");
   renewal-period is defined in `seconds` and bandwidth in `KB`
 * Access restriction policies:
   * `check-header` policy - enforce that a request has specified HTTP header
-  * `rate-limit` policy - limit call rate to a specified number
-  * `rate-limit-by-key` policy - limit call rate by a key to a specified number. ex - limit calls per IP address for an hour.
+  * `rate-limit` policy - limit call rate to a specified number. Returns `429 Too Many Requests` error
+  * `rate-limit-by-key` policy - limit call rate by a key to a specified number. ex - limit calls per IP address for an hour. Returns `429 Too Many Requests` error
   * `ip-filter` - only allow calls from specified ip address range
-  * `quota` - limit by call volume or bandwidth by subscription. The renewal period cannot be less than 3600
-  * `quota-by-key` - limit by call volume or bandwidth by a key - key can be ip address etc.
+  * `quota` - limit by call volume or bandwidth by subscription. The renewal period cannot be less than 3600. Returns `403 Forbidden error`
+  * `quota-by-key` - limit by call volume or bandwidth by a key - key can be ip address etc. Returns `403 Forbidden error`
   * `validate-jwt` - enforces existence and validity of a jwt token
 * `Versions` vs `Revisions`
   * Version - allows you to expose breaking changes, requires publishing.
@@ -807,6 +821,17 @@ cache.KeyDelete("key");
 * API authentication policies to authenticate with a backend service - `Basic, Client certificate and Managed identity`
   
 # Security
+## .net Application
+```csharp
+//Applying multiple Authorize attributes to a controller class ensures that only users that have both roles can execute actions in the class.
+[Authorize(Role="Owner")]
+[Authorize(Role="User")]
+.
+.
+//user must be in Owner role or User role.
+[Authorize(Roles = "Owner,User")]
+```
+* For your app to use Azure DevOps Rest API - register app with AzureDevops at https://app.vsaex.visualstudio.com/app/register
 
 ## Azure Active Directory
 * [Overview](https://www.youtube.com/watch?v=zjezqZPPOfc&list=PLLasX02E8BPBxGouWlJV-u-XZWOc2RkiX)
@@ -878,3 +903,20 @@ cache.KeyDelete("key");
 * Purging CDN in portal make it immediately get the contents from the site.
 * To add and endpoint:
   * Set Origin type to `Custom Origin` if you are trying to cache from your own custom domain. If you choose other options Azure will automatically set the origin name to <your_resource_name>.<resource_type>.core.windows.net. Ex - if you choose storage - origin will be set to mystorageaccount.blob.core.windows.net 
+* `Optimization types`:
+  * General web delivery - web content optimization, also for file and video downloads
+  * General media streaming - live streaming, video on demand
+  * Video on demand media streaming
+  * Large file download
+  * Dynamic site acceleration - includes various techniques that benefit the latency and performance of dynamic content
+
+## Application Insights
+* Usage Analysis:
+  * `Retention` - how many users come back
+  * `Users` - how many people used your app and its features
+  * `Sessions` - how many sessions of user activity have included certain pages and features of your app
+  * `Events` - how often certain pages and features are used
+  * `Funnels` - progression through a series of steps, are users following all steps of a process, or are they ending early?
+  * `Cohorts` - set of users, sessions, events or operations that have something in common
+  * `Impact` - how load times and other properties influence conversion rates
+  * `User Flows` - analyze user navigation patterns
