@@ -174,7 +174,7 @@ await eventHubClient.CloseAsync();
 * Code to send messages:
   ```csharp
   queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
-  await queueClient.SendAsync(message);
+  await queueClient.SendAsync(string message);
   await queueClient.CloseAsync();
   ```
 * Received messages:
