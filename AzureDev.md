@@ -1,5 +1,4 @@
 - [Messaging](#messaging)
-  - [Storage Queues](#storage-queues)
   - [Azure Event Grid](#azure-event-grid)
   - [Azure Event Hub](#azure-event-hub)
   - [Azure Service Bus](#azure-service-bus)
