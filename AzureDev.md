@@ -180,8 +180,7 @@ await eventHubClient.CloseAsync();
   }), messageHandlerOptions);
   await queueClient.CloseAsync();
   ```
-* Support a max of `64 KB`
-* Retreiving message from queue, takes it offline for 30 seconds. So, you need to delete after retreiving message if you don't want that message to be picked up by another client.
+
 ### Topics
 * Filter conditions for subscriptions:
   * `Boolean filters` - `TrueFilter` and `FalseFilter` either cause all arriving messages (true) or none of the arriving messages (false) to be selected for the subscription
@@ -276,6 +275,8 @@ await eventHubClient.CloseAsync();
   TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "Dave");
   ```
 ## Queues
+* Support a max of `64 KB`
+* Retreiving message from queue, takes it offline for 30 seconds. So, you need to delete after retreiving message if you don't want that message to be picked up by another client.
 * Set visibility timeout - hide items in queue for specified time
   ```csharp
   CloudStorageAccount account = CloudStorageAccount.Parse(connectionString);
