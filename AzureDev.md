@@ -796,6 +796,7 @@ cache.KeyDelete("key");
   <policies>
     <inbound>
         <base />
+        <!--bandwidth is in KB and period is in seconds -->
         <quota calls="10000" bandwidth="40000" renewal-period="3600" />
     </inbound>
     <outbound>
