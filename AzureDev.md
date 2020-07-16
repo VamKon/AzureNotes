@@ -169,7 +169,7 @@ await eventHubClient.CloseAsync();
 * Code to send messages:
   ```csharp
   queueClient = new QueueClient(ServiceBusConnectionString, QueueName);
-  await queueClient.SendAsync(string message);
+  await queueClient.SendAsync(new Message(Encoding.UTF8.GetBytes(message)));
   await queueClient.CloseAsync();
   ```
 * Received messages:
@@ -304,6 +304,7 @@ await eventHubClient.CloseAsync();
 * You can scale based on a custom metric from App Insights
 * To use Application Insights - `Always On` should be enabled.
 * Logging:
+  * Both Filesystem and Blob Storage are supported for Windows app. Only FileSystem is supported for Linux. Also, Blob storage account must be in the same region as the app.
   * to stream logs - `az webapp log tail --name appname --resource-group myResourceGroup`
   * filter errors in logs - `az webapp log tail --name appname --resource-group myResourceGroup --filter Error`
   * filter specific log types - `az webapp log tail --name appname --resource-group myResourceGroup --path http`
@@ -378,6 +379,8 @@ await eventHubClient.CloseAsync();
 * `Update-AZVM` - associate existing identity with VM.
 * `Update-AZVM -IdentityType` - Accepted values are SystemAssigned, UserAssigned, SystemAssignedUserAssigned. - will only assign the IdentityType specified in the flag.
 * Virtual machines *do not support* `TPM disk images`
+* Azure Disk Encryption is not supported on generation 1 VMs
+* You must convert the VHDX file to VHD before uploading an on-premise VM to Azure. You must also convert any dynamic disks to fixed disks before upload.
 ## AKS
 * `Kubernetes CustomResourceDefinitions` - The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource.
 * `KEDA` - Kubernetes Event Driven Architecture
@@ -606,6 +609,7 @@ cache.KeyDelete("key");
   var result = database.Execute("PING").TOString();
   //If there are not connectivity issues a PONG response is received.
   ```
+* `SETEX mykey 1800 "value"` - SETEX store a value in a key and also set an expiry.
   
 ## Sql
 * Protecting sensitive data
@@ -647,7 +651,7 @@ cache.KeyDelete("key");
   * `Eventual`: There's no ordering guarantee for reads. In the absence of any further writes, the replicas eventually converge. 
 * Cosmos Db with regional failover\
   `az cosmosdb update --name "abc" --resource-group "abc" --locations "South central US"=0 "North Central US"=1 "East US" = 2`
-* Azure Cosmos DB provides language-integrated, transactional execution of JavaScript that lets you write stored procedures, triggers, and user-defined functions (UDFs).
+* Azure Cosmos DB provides language-integrated, transactional execution of JavaScript that lets you write stored procedures, triggers, and user-defined functions (UDFs). *They are only available for SQL API and only Javascript can be used.*
   * Stored procs:
   ```javascript
   var helloWorldStoredProc = {
@@ -809,8 +813,8 @@ cache.KeyDelete("key");
   * `quota-by-key` - limit by call volume or bandwidth by a key - key can be ip address etc. Returns `403 Forbidden error`
   * `validate-jwt` - enforces existence and validity of a jwt token
 * `Versions` vs `Revisions`
-  * Version - allows you to expose breaking changes, requires publishing.
-  * Revision - allows you to add non-breaking changes, such as addition of operations. Users can access by using a different query string at the same endpoint.
+  * Version - allows you to expose breaking changes, requires publishing. Can mention version in header without having to change url
+  * Revision - allows you to add non-breaking changes, such as addition of operations. Users can access by using a different query string at the same endpoint. Revision number has to mentioned in the url, so urls will be different for each revision
 * Create an instance - `New-AzApiManagement -ResourceGroupName` "myResourceGroup" `-Location` "West US" `-Name` "apim-name" `-Organization` "myOrganization" `-AdminEmail` "myEmail" `-Sku` "Developer"
 * You can set up `Mock` API responses to cache responses.
 * To use an API outside of developer portal:
