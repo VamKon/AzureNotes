@@ -197,10 +197,10 @@ await eventHubClient.CloseAsync();
   * `NoRetry` - Does not retry
 * Send messages to a topic:
   ```csharp
-  static async Task SendMessage(string connectionString, string entityPath, byte[] message)
+  static async Task SendMessage(string connectionString, string entityPath, string message)
   {
     var client = new TopicClient(connectionString, entityPath);
-    await client.SendAsync(new Message(message));
+    await client.SendAsync(new Message(Encoding.UTF8.GetBytes(message)));
   }
   ```
 ## Notification Hubs
@@ -298,7 +298,7 @@ await eventHubClient.CloseAsync();
   manual-integration disables automatic sync 
 * App Service Plans:
   * Free, Shared - run on same VM as other app service plans, cannot scale
-  * Basic, Standard, Premium and Premium V2 - runs on dedicated VMs. Higher the tier more the scaling. Deployment slots are only available on Standard plan and up
+  * Basic, Standard, Premium and Premium V2 - runs on dedicated VMs. Higher the tier more the scaling. Deployment slots and scaling are only available on Standard plan and up
   * Isolated - dedicated VMs, dedicated VNets, provides network and compute isolation, max scale out capabilities.
 * `Always On` can be enabled to keep app always loaded even when there is no traffic. Available in `Basic` service plan and above.
 * You can scale based on a custom metric from App Insights
