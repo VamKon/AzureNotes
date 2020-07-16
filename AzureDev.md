@@ -180,7 +180,7 @@ await eventHubClient.CloseAsync();
   }), messageHandlerOptions);
   await queueClient.CloseAsync();
   ```
-
+* Provides duplicate detection and FIFO ordering
 ### Topics
 * Filter conditions for subscriptions:
   * `Boolean filters` - `TrueFilter` and `FalseFilter` either cause all arriving messages (true) or none of the arriving messages (false) to be selected for the subscription
@@ -285,7 +285,8 @@ await eventHubClient.CloseAsync();
   //De-queue 20 messages and set VisibilityTimeout for those messages to 5 mins. After 5 mins they will be visible again for de-queuing unless deleted.
   var messages = queue.GetMessages(20, TimeSpan.FromMinutes(5));
   ```
-
+* Do not guarantee FIFO order of messages
+* Does not provide duplicate detection of messages
 # Azure App Service
 * If `WEBSITES_ENABLE_APP_SERVICE_STORAGE` setting is unspecified or set to true, the /home/ directory will be shared across scale instances, and files written will persist across restarts. Explicitly setting WEBSITES_ENABLE_APP_SERVICE_STORAGE to false will disable the mount.
 * While using an `Application Gateway (WAF)` - for end to end TLS, trusted Azure Services such as Azure Web Apps do not require adding any additional SSL certs. SSL certs are still required for TLS termination at app gateway.
