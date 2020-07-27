@@ -1,4 +1,4 @@
-# Azure Fundamentals
-Collection of important Azure fundamentals
-[DevOps](/DevOps.md)
-[Azure Developer](/AzureDev.md)
+# Azure Notes
+Collection of notes that I found useful for my certification prep
+* [DevOps](/DevOps.md)
+* [Azure Developer](/AzureDev.md)
